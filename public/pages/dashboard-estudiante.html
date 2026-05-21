@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Estudiante — Bolsa LDV</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <style>
+    /* ── WELCOME HERO ───────────────────────────── */
+    .welcome-hero {
+      background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 55%, var(--accent) 120%);
+      border-radius: 28px; padding: 28px 32px; margin-bottom: 26px;
+      display: flex; justify-content: space-between; align-items: stretch; gap: 26px;
+      position: relative; overflow: hidden; flex-wrap: wrap;
+      box-shadow: 0 18px 50px rgba(7,20,40,0.24); border: 1px solid rgba(29,111,232,0.28);
+    }
+    .welcome-hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 20% 20%, rgba(29,111,232,0.18), transparent 45%),
+                  radial-gradient(circle at 80% 30%, rgba(34,211,238,0.18), transparent 55%);
+    }
+    .welcome-hero .wtext   { position: relative; z-index: 1; }
+    .welcome-hero .wname   { font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; color: white; letter-spacing: -0.03em; }
+    .welcome-hero .wsub    { font-size: .84rem; color: rgba(255,255,255,0.78); margin-top: 4px; }
+    .welcome-hero .wbadges { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; position: relative; z-index: 1; }
+    .welcome-hero .badge { border-color: rgba(255,255,255,0.22); }
+    .welcome-hero .badge-gray {
+      background: rgba(255,255,255,0.16);
+      color: #ffffff;
+      border-color: rgba(255,255,255,0.32);
+    }
+    .welcome-hero .badge-blue {
+      background: rgba(29,111,232,0.26);
+      color: #ffffff;
+      border-color: rgba(29,111,232,0.45);
+    }
+    .welcome-left { display: flex; align-items: flex-start; gap: 18px; flex: 1; min-width: 240px; position: relative; z-index: 1; }
+    .welcome-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 14px; }
+    .welcome-meta-grid .meta-card { background: rgba(29,111,232,0.14); border: 1px solid rgba(29,111,232,0.22); border-radius: 12px; padding: 10px 12px; color: white; display: flex; flex-direction: column; }
+    .meta-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .12em; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+    .meta-value { font-size: .9rem; font-weight: 600; letter-spacing: -.01em; color: #eaf2ff; }
+    .welcome-stat-grid { display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: 12px; min-width: 280px; position: relative; z-index: 1; }
+    .hero-stat-card { background: rgba(8,23,46,0.35); border: 1px solid rgba(29,111,232,0.25); border-radius: 18px; padding: 14px 16px; color: white; box-shadow: inset 0 0 0 1px rgba(29,111,232,0.08); display: flex; flex-direction: column; gap: 4px; }
+    .hero-stat-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; color: rgba(255,255,255,0.75); }
+    .hero-stat-value { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; letter-spacing: -.03em; color: var(--blue-200); }
+    .hero-stat-sub { font-size: .75rem; color: rgba(255,255,255,0.8); }
+
+    /* ── OFFERS GRID ────────────────────────────── */
+    .offers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(305px, 1fr)); gap: 16px; }
+    .job-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 0; display: flex; flex-direction: column; transition: all .22s cubic-bezier(.4,0,.2,1); overflow: hidden; box-shadow: var(--shadow-xs); cursor: pointer; }
+    .job-card:hover { border-color: rgba(29,111,232,0.28); transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .job-card-top { padding: 18px 18px 13px; flex: 1; }
+    .job-card-bottom { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #f9fbff; }
+    .match-bar { height: 3px; background: rgba(29,111,232,0.1); border-radius: 0; overflow: hidden; }
+    .match-bar-fill { height: 100%; border-radius: 0; background: linear-gradient(90deg, #10b981, #22d3ee); transition: width .6s ease; }
+    .match-pill { display: inline-flex; align-items: center; gap: 5px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; border-radius: 99px; padding: 3px 10px; font-size: .72rem; font-weight: 700; }
+    .match-pill::before { content: '✓ '; }
+
+    /* ── MY APPLICATIONS LIST ───────────────────── */
+    .my-post-row {
+      background: white; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px 18px; margin-bottom: 10px; display: flex; align-items: center;
+      gap: 14px; flex-wrap: wrap; transition: border-color .18s; box-shadow: var(--shadow-xs);
+    }
+    .my-post-row:hover { border-color: var(--border-md); }
+
+    /* Preseleccionado: empresa te eligió, esperando carta */
+    .my-post-row.preseleccionado {
+      border-color: rgba(245,158,11,0.4);
+      background: rgba(245,158,11,0.03);
+      border-left: 3px solid var(--amber);
+    }
+
+    /* Contratado: proceso cerrado, carta emitida */
+    .my-post-row.contratado {
+      border-color: rgba(16,185,129,0.4);
+      background: rgba(16,185,129,0.03);
+      border-left: 3px solid var(--green);
+    }
+
+    .my-post-row.rechazado { opacity: .55; }
+
+    /* ── FILTERS ──────────────────────────────── */
+    .filters-bar { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 20px; align-items: center; }
+    .search-input-main { flex: 1; min-width: 220px; background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text); font-family: var(--font-body); font-size: .88rem; outline: none; transition: all .18s; }
+    .search-input-main:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,111,232,0.08); }
+    .search-input-main::placeholder { color: #aac4e0; }
+
+    .match-notice { background: linear-gradient(135deg, rgba(16,185,129,0.07), rgba(34,211,238,0.04)); border: 1px solid rgba(16,185,129,0.20); border-radius: var(--radius-sm); padding: 11px 15px; margin-bottom: 18px; font-size: .83rem; color: #065f46; display: flex; align-items: center; gap: 8px; }
+    .status-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .status-tab { padding: 6px 13px; border-radius: 99px; border: 1.5px solid var(--border); background: white; color: var(--text-muted); font-size: .78rem; font-weight: 600; cursor: pointer; transition: all .15s; font-family: var(--font-body); }
+    .status-tab:hover { border-color: var(--border-md); color: var(--accent); }
+    .status-tab.active { background: var(--accent-dim); border-color: rgba(29,111,232,0.30); color: var(--accent); }
+    .pipeline-step { cursor: pointer; }
+    .pipeline-step.selected {
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
+    }
+    .pipeline-step.selected .ps-num { color: #ffffff; }
+    .pipeline-step.selected[data-filter="enviada"] { background: var(--cyan-400); }
+    .pipeline-step.selected[data-filter="en_revision"] { background: var(--accent-2); }
+    .pipeline-step.selected[data-filter="preseleccionado"] { background: var(--amber); }
+    .pipeline-step.selected[data-filter="contratado"] { background: var(--green); }
+    .pipeline-step.selected[data-filter="rechazado"] { background: var(--red); }
+    .pipeline-step.active-red { background: var(--red-dim); color: var(--red); }
+    .pipeline-step.selected.active-red { color: #ffffff; }
+    .pipeline-step.selected.active-red .ps-num { color: #ffffff; }
+
+    /* ── DETAIL MODAL ─────────────────────────── */
+    .detail-section { margin-bottom: 16px; }
+    .detail-section-title { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; color: var(--text-muted); margin-bottom: 6px; font-family: var(--font-display); }
+    .detail-section-body { font-size: .85rem; color: var(--text-2); line-height: 1.65; white-space: pre-wrap; }
+
+    @media(max-width:720px) {
+      .welcome-hero { padding: 24px; gap: 18px; }
+      .welcome-left { flex-direction: column; align-items: flex-start; }
+      .welcome-stat-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); width: 100%; }
+    }
+
+    /* ── PERFIL ESTUDIANTE ───────────────────────── */
+    .profile-hero {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      box-shadow: var(--shadow-sm);
+    }
+    .profile-hero h3 { margin: 0; font-size: 1.25rem; }
+    .profile-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      font-size: .85rem;
+    }
+    .profile-meta-grid span { color: var(--text-muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: 4px; }
+    .profile-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-xs); }
+    .profile-card h4 { margin-top: 0; }
+    .profile-field { margin-bottom: 12px; }
+    .profile-field label { display: block; font-size: .78rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+    .profile-field input,
+    .profile-field textarea,
+    .profile-field select { width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; font-size: .85rem; font-family: inherit; }
+    .profile-field textarea { min-height: 80px; resize: vertical; }
+    .profile-field input:focus,
+    .profile-field textarea:focus,
+    .profile-field select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(29,111,232,0.08); outline: none; }
+    .profile-edit-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
+    @media(max-width:900px) { .profile-edit-grid { grid-template-columns: 1fr; } }
+    .request-history { display: flex; flex-direction: column; gap: 12px; max-height: 360px; overflow-y: auto; }
+    .request-entry { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; background: #f9fbff; }
+    .request-entry header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: .78rem; color: var(--text-muted); margin-bottom: 6px; }
+    .request-entry ul { margin: 0; padding-left: 16px; font-size: .82rem; color: var(--text-soft); }
+    .request-note { font-size: .78rem; color: var(--text-muted); margin-top: 6px; }
+    .request-response { font-size: .8rem; color: var(--green); margin-top: 6px; }
+    .pending-banner {
+      background: rgba(59,130,246,0.08);
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: .85rem;
+      color: #1d4ed8;
+      margin: 16px 0;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-brand">
+    <div class="navbar-logo">LV</div>
+    <div><div class="navbar-title">Bolsa de Trabajo <span>LDV</span></div></div>
+  </div>
+  <div class="navbar-links">
+    <span id="estNombreNav" style="color:var(--text-muted);font-size:.83rem;font-weight:600;"></span>
+    <span id="tipoBadgeNav" style="margin-left:4px;"></span>
+    <button onclick="logout()" class="btn btn-outline btn-sm" style="margin-left:10px;">Salir</button>
+  </div>
+</nav>
+
+<div class="dashboard">
+  <div class="sidebar">
+    <div class="sidebar-user">
+      <div class="avatar" style="width:36px;height:36px;" id="sideAvatar">?</div>
+      <div>
+        <div class="name" id="sideNombre">—</div>
+        <div class="role" id="sideTipo">Estudiante</div>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <button class="nav-item active" onclick="showSection('ofertas')">
+        <span class="nav-icon">🔍</span> Buscar Ofertas
+      </button>
+      <button class="nav-item" onclick="showSection('postulaciones')">
+        <span class="nav-icon">📨</span> Mis Postulaciones
+        <span class="nav-badge" id="badgePost">0</span>
+      </button>
+      <button class="nav-item" onclick="showSection('perfil')">
+        <span class="nav-icon">👤</span> Mi Perfil
+      </button>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    <!-- ═══ BUSCAR OFERTAS ═══ -->
+    <div id="secOfertas" class="section-content">
+      <div class="welcome-hero" id="welcomeHero" style="display:none;">
+        <div class="welcome-left">
+          <div class="avatar" style="width:56px;height:56px;font-size:1.15rem;position:relative;z-index:1;" id="welcomeAvatar">?</div>
+          <div class="wtext">
+            <div class="wname" id="welcomeName">Cargando...</div>
+            <div class="wsub"  id="welcomeInfo">—</div>
+            <div class="wbadges" id="welcomeBadges"></div>
+            <div class="welcome-meta-grid" id="welcomeMeta"></div>
+          </div>
+        </div>
+        <div class="welcome-stat-grid">
+          <div class="hero-stat-card">
+            <span class="hero-stat-label">Postulaciones</span>
+            <span class="hero-stat-value" id="statHeroPost">0</span>
+            <span class="hero-stat-sub">Total enviadas</span>
+          </div>
+          <div class="hero-stat-card">
+            <span class="hero-stat-label">En revisión</span>
+            <span class="hero-stat-value" id="statHeroRevision">0</span>
+            <span class="hero-stat-sub">Con la empresa</span>
+          </div>
+          <div class="hero-stat-card">
+            <span class="hero-stat-label">Seleccionadas</span>
+            <span class="hero-stat-value" id="statHeroSel">0</span>
+            <span class="hero-stat-sub">Preselec. o contratado</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div>
+          <div class="section-title">Ofertas para ti</div>
+          <div class="section-subtitle" id="ofertasSubtitle">Cargando ofertas compatibles con tu perfil...</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="toggleFiltroPersonalizado()" id="btnFiltroAll">
+          🌐 Ver todas las ofertas
+        </button>
+      </div>
+
+      <div class="match-notice" id="matchNotice" style="display:none;">
+        ✅ Mostrando ofertas filtradas por tu perfil de <strong id="matchTipo"></strong>.
+        Las marcadas con <span class="match-pill" style="display:inline-flex;font-size:.69rem;padding:2px 7px;">tu perfil</span> son las más compatibles.
+      </div>
+
+      <div class="filters-bar">
+        <input type="text" class="search-input-main" id="searchInput"
+          placeholder="🔍 Buscar por puesto, empresa, carrera..." oninput="filterOfertas()">
+        <select class="form-control" id="filtroTipo" style="width:150px;" onchange="loadOfertas()">
+          <option value="">Todos los tipos</option>
+          <option value="practicas">🎓 Prácticas</option>
+          <option value="trabajo">💼 Trabajo</option>
+        </select>
+        <select class="form-control" id="filtroModalidad" style="width:155px;" onchange="loadOfertas()">
+          <option value="">Todas las modalidades</option>
+          <option value="presencial">🏢 Presencial</option>
+          <option value="remoto">🌐 Remoto</option>
+          <option value="hibrido">🔀 Híbrido</option>
+        </select>
+      </div>
+
+      <div id="resultCount" style="font-size:.81rem;color:var(--text-muted);margin-bottom:14px;"></div>
+      <div class="offers-grid" id="ofertasGrid">
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-state-icon">⏳</div><h3>Cargando ofertas...</h3>
+        </div>
+      </div>
+      <div class="table-pagination" id="ofertasPager"></div>
+    </div>
+
+    <!-- ═══ MIS POSTULACIONES ═══ -->
+    <div id="secPostulaciones" class="section-content" style="display:none;">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Mis Postulaciones</div>
+          <div class="section-subtitle">Estado de todas tus candidaturas</div>
+        </div>
+      </div>
+
+      <!-- Pipeline -->
+      <div class="pipeline-bar" id="pipelineBar" style="display:none;">
+        <div class="pipeline-step" id="pipe-enviada" data-filter="enviada" onclick="togglePostFiltro('enviada')">
+          <span class="ps-num" id="pn-enviada">0</span> Enviadas
+        </div>
+        <div class="pipeline-step" id="pipe-revision" data-filter="en_revision" onclick="togglePostFiltro('en_revision')">
+          <span class="ps-num" id="pn-revision">0</span> En revisión
+        </div>
+        <div class="pipeline-step" id="pipe-presel" data-filter="preseleccionado" onclick="togglePostFiltro('preseleccionado')">
+          <span class="ps-num" id="pn-presel">0</span> Preseleccionado
+        </div>
+        <div class="pipeline-step" id="pipe-cont" data-filter="contratado" onclick="togglePostFiltro('contratado')">
+          <span class="ps-num" id="pn-cont">0</span> Contratado
+        </div>
+        <div class="pipeline-step" id="pipe-rej" data-filter="rechazado" onclick="togglePostFiltro('rechazado')">
+          <span class="ps-num" id="pn-rej">0</span> Rechazadas
+        </div>
+      </div>
+
+      <div class="status-tabs" id="statusTabs" style="display:none;">
+        <button class="status-tab active" data-filter="todos"          onclick="filtrarMisPost('todos',this)">Todas</button>
+        <button class="status-tab"        data-filter="enviada"        onclick="filtrarMisPost('enviada',this)">📨 Enviadas</button>
+        <button class="status-tab"        data-filter="en_revision"    onclick="filtrarMisPost('en_revision',this)">🔍 En revisión</button>
+        <button class="status-tab"        data-filter="preseleccionado" onclick="filtrarMisPost('preseleccionado',this)">⏳ Preseleccionado</button>
+        <button class="status-tab"        data-filter="contratado"     onclick="filtrarMisPost('contratado',this)">✅ Contratado</button>
+        <button class="status-tab"        data-filter="rechazado"      onclick="filtrarMisPost('rechazado',this)">❌ Rechazadas</button>
+      </div>
+
+      <div id="misPostulaciones"></div>
+      <div class="table-pagination" id="postulacionesPager"></div>
+    </div>
+
+    <!-- ═══ MI PERFIL ═══ -->
+    <div id="secPerfil" class="section-content" style="display:none;">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Mi Perfil</div>
+          <div class="section-subtitle">Información visible para las empresas al revisar tu postulación</div>
+        </div>
+      </div>
+      <div id="perfilData">
+        <div class="card"><div class="empty-state"><h3>Cargando...</h3></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL POSTULAR ═══ -->
+<div class="modal-overlay" id="modalPostular">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modalTitulo">Postular</h3>
+      <button class="modal-close" onclick="closeModal('modalPostular')">×</button>
+    </div>
+    <div id="modalDetalle" style="margin-bottom:18px;"></div>
+    <div id="alertPostular" class="alert"></div>
+    <form id="formPostular" enctype="multipart/form-data">
+      <input type="hidden" id="postularOfertaId" name="oferta_id">
+      <div class="form-group">
+        <label class="form-label">Tu CV en PDF *</label>
+        <div class="file-upload" id="fileDropZone">
+          <input type="file" id="cvFile" name="cv" accept=".pdf" required>
+          <div class="file-upload-icon">📄</div>
+          <div class="file-upload-text">Haz clic o arrastra tu <span>CV en PDF</span></div>
+          <div class="file-name" id="cvFileName"></div>
+        </div>
+        <div class="form-hint">Máximo 10 MB. Solo archivos PDF.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Carta de presentación <span style="color:var(--text-muted);font-size:.72rem;">(recomendada)</span></label>
+        <textarea class="form-control" name="carta_presentacion" rows="4"
+          placeholder="Preséntate: ¿por qué eres el candidato ideal? ¿qué puedes aportar?..."></textarea>
+        <div class="form-hint">Una carta bien escrita aumenta significativamente tus posibilidades.</div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;" id="btnPostular">
+        🚀 Enviar postulación
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ MODAL DETALLE ═══ -->
+<div class="modal-overlay" id="modalDetalleFull">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="detalleTitle">Detalle</h3>
+      <button class="modal-close" onclick="closeModal('modalDetalleFull')">×</button>
+    </div>
+    <div id="detalleContent"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/global.js"></script>
+<script>
+if (!Auth.requireAuth('estudiante')) {}
+const user = Auth.getUser();
+document.getElementById('estNombreNav').textContent = user?.nombre || '';
+
+let ofertasCargadas   = [];
+let misPostData       = [];
+let perfilData        = null;
+let perfilSolicitudes = [];
+let mostrarTodas      = false;
+let appliedOfferIds   = new Set();
+let appliedOffersLoaded = false;
+let currentPostFilter = 'todos';
+const PAGE_SIZE = 10;
+const LIST_PAGES = { ofertas: 1, postulaciones: 1 };
+const LIST_PAGERS = { ofertas: 'ofertasPager', postulaciones: 'postulacionesPager' };
+const EST_PERFIL_DRAFT_KEY = `ldv_est_profile_draft_${user?.id || 'anon'}`;
+
+function readDraft(key) {
+  try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; }
+}
+
+function writeDraft(key, data) {
+  localStorage.setItem(key, JSON.stringify(data || {}));
+}
+
+function clearDraft(key) {
+  localStorage.removeItem(key);
+}
+
+function getFormValues(form) {
+  const data = {};
+  Array.from(form.elements || []).forEach(el => {
+    if (!el.name) return;
+    if (el.type === 'checkbox') {
+      data[el.name] = el.checked;
+    } else if (el.type === 'radio') {
+      if (el.checked) data[el.name] = el.value;
+    } else {
+      data[el.name] = el.value;
+    }
+  });
+  return data;
+}
+
+function applyFormValues(form, values) {
+  if (!values || typeof values !== 'object') return;
+  Object.entries(values).forEach(([name, value]) => {
+    const el = form.elements[name];
+    if (!el) return;
+    if (el.type === 'checkbox') {
+      el.checked = Boolean(value);
+    } else if (el.type === 'radio') {
+      const radio = form.querySelector(`input[name="${name}"][value="${String(value)}"]`);
+      if (radio) radio.checked = true;
+    } else {
+      el.value = value;
+    }
+  });
+}
+
+function bindDraftHandlers(form, key) {
+  const handler = () => writeDraft(key, getFormValues(form));
+  form.addEventListener('input', handler);
+  form.addEventListener('change', handler);
+  return handler;
+}
+let currentOffersView = [];
+let currentPostView = [];
+const AUTO_REFRESH_MS = 15000;
+const AUTO_REFRESHABLE_SECTIONS = new Set(['ofertas','postulaciones','perfil']);
+let currentSection = 'ofertas';
+let autoRefreshTimer = null;
+
+function clampPage(page, totalPages) {
+  return Math.min(Math.max(1, page), totalPages);
+}
+
+function paginateData(data, key) {
+  const totalItems = data.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  const page = clampPage(LIST_PAGES[key] || 1, totalPages);
+  LIST_PAGES[key] = page;
+  const start = (page - 1) * PAGE_SIZE;
+  return { items: data.slice(start, start + PAGE_SIZE), page, totalPages, totalItems };
+}
+
+function getPagerPages(current, total) {
+  const pages = [];
+  for (let p = 1; p <= total; p += 1) {
+    if (p === 1 || p === total || Math.abs(p - current) <= 1) pages.push(p);
+  }
+  return pages;
+}
+
+function renderPagination(key, totalItems, page, totalPages) {
+  const container = document.getElementById(LIST_PAGERS[key]);
+  if (!container) return;
+  if (totalItems <= PAGE_SIZE) {
+    container.innerHTML = '';
+    return;
+  }
+  const pages = getPagerPages(page, totalPages);
+  let html = '<div class="pager-group">';
+  html += `<button class="pager-btn" ${page <= 1 ? 'disabled' : ''} onclick="setListPage('${key}', ${page - 1})">Anterior</button>`;
+  let last = 0;
+  pages.forEach(p => {
+    if (p - last > 1) html += '<span class="pager-ellipsis">...</span>';
+    html += `<button class="pager-btn ${p === page ? 'active' : ''}" onclick="setListPage('${key}', ${p})">${p}</button>`;
+    last = p;
+  });
+  html += `<button class="pager-btn" ${page >= totalPages ? 'disabled' : ''} onclick="setListPage('${key}', ${page + 1})">Siguiente</button>`;
+  html += '</div>';
+  html += `<div class="pager-group">
+    <span class="pager-meta">Pagina ${page} de ${totalPages}</span>
+    <input class="pager-input" type="number" min="1" max="${totalPages}" id="pagerJump-${key}" value="${page}">
+    <button class="pager-btn" onclick="jumpToPage('${key}')">Ir</button>
+  </div>`;
+  container.innerHTML = html;
+}
+
+function setListPage(key, page) {
+  LIST_PAGES[key] = page;
+  if (key === 'ofertas') {
+    renderOfertas(currentOffersView);
+  } else if (key === 'postulaciones') {
+    renderMisPostulaciones(currentPostView);
+  }
+}
+
+function jumpToPage(key) {
+  const input = document.getElementById(`pagerJump-${key}`);
+  if (!input) return;
+  const value = parseInt(input.value, 10);
+  if (Number.isNaN(value)) return;
+  setListPage(key, value);
+}
+
+function refreshCurrentSection() {
+  if (document.hidden) return;
+  if (currentSection === 'ofertas') {
+    loadOfertas(false);
+  } else if (currentSection === 'postulaciones') {
+    loadMisPostulaciones();
+  } else if (currentSection === 'perfil') {
+    loadPerfil(true);
+  }
+}
+
+function scheduleAutoRefresh() {
+  clearInterval(autoRefreshTimer);
+  if (!AUTO_REFRESHABLE_SECTIONS.has(currentSection)) return;
+  autoRefreshTimer = setInterval(refreshCurrentSection, AUTO_REFRESH_MS);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) refreshCurrentSection();
+});
+
+function showSection(id) {
+  document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const sec = document.getElementById('sec' + id[0].toUpperCase() + id.slice(1));
+  if (sec) sec.style.display = 'block';
+  const btn = document.querySelector(`[onclick="showSection('${id}')"]`);
+  if (btn) btn.classList.add('active');
+  currentSection = id;
+  if (id === 'ofertas')       loadOfertas();
+  if (id === 'postulaciones') loadMisPostulaciones();
+  if (id === 'perfil')        loadPerfil(true);
+  scheduleAutoRefresh();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function capitalize(s)  { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+const ESTUDIANTE_FIELD_LABELS = {
+  correo: 'Correo de contacto',
+  telefono: 'Teléfono de contacto',
+  direccion: 'Dirección',
+  estado_civil: 'Estado civil',
+  ciclo: 'Ciclo académico',
+  anio_egreso: 'Año de egreso',
+  anio_titulacion: 'Año de titulación',
+  habilidades: 'Habilidades destacadas',
+  password: 'Nueva contraseña'
+};
+let estudianteEditableKeys = [];
+
+function getEditableKeysForPerfil(perfil) {
+  const tipo = perfil?.tipo;
+  if (tipo === 'egresado') {
+    return ['correo','telefono','direccion','estado_civil','anio_egreso','habilidades','password'];
+  }
+  if (tipo === 'titulado') {
+    return ['correo','telefono','direccion','estado_civil','anio_egreso','anio_titulacion','habilidades','password'];
+  }
+  return ['correo','telefono','direccion','estado_civil','ciclo','habilidades','password'];
+}
+
+function escapeAttr(value) {
+  return (value ?? '').toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function solicitudStatusBadge(estado) {
+  const map = {
+    pendiente: ['badge-yellow', 'Pendiente'],
+    aprobado: ['badge-green', 'Aprobado'],
+    rechazado: ['badge-red', 'Rechazado']
+  };
+  const data = map[estado] || ['badge-gray', estado || '—'];
+  return `<span class="badge ${data[0]}">${data[1]}</span>`;
+}
+
+function maskSolicitudValue(key, value) {
+  if (key === 'password' || key === 'password_hash') return '•••••••• (se actualizará al aprobar)';
+  return value || '—';
+}
+
+function formatSolicitudCampos(campos = {}) {
+  const entries = Object.entries(campos);
+  if (!entries.length) return '<div style="font-size:.8rem;color:var(--text-muted);">Sin campos</div>';
+  return `<ul>${entries.map(([k, v]) => `<li><strong>${ESTUDIANTE_FIELD_LABELS[k] || k}:</strong> ${maskSolicitudValue(k, v)}</li>`).join('')}</ul>`;
+}
+
+function buildSolicitudHistory(list) {
+  if (!list.length) {
+    return `<div class="empty-state" style="padding:18px;">
+      <div class="empty-state-icon">📝</div>
+      <h3>Sin solicitudes</h3>
+      <p>Aún no has pedido cambios en tu perfil.</p>
+    </div>`;
+  }
+  return `<div class="request-history">
+    ${list.map(item => `
+      <div class="request-entry">
+        <header>
+          ${solicitudStatusBadge(item.estado)}
+          <span>Enviada: ${formatDate(item.creado_en)}</span>
+          ${item.resuelto_en ? `<span>Resuelto: ${formatDate(item.resuelto_en)}</span>` : ''}
+        </header>
+        ${formatSolicitudCampos(item.campos)}
+        ${item.motivo ? `<div class="request-note">📌 Motivo: ${item.motivo}</div>` : ''}
+        ${item.respuesta_admin ? `<div class="request-response">📝 Respuesta admin: ${item.respuesta_admin}</div>` : ''}
+      </div>`).join('')}
+  </div>`;
+}
+
+function renderPerfilEstudiante(data, solicitudes) {
+  const container = document.getElementById('perfilData');
+  if (!container) return;
+  const nombre = `${data.nombres} ${data.apellidos}`.trim();
+  const pending = solicitudes.find(s => s.estado === 'pendiente');
+  const esEgresado = data.tipo === 'egresado';
+  const esTitulado = data.tipo === 'titulado';
+  const muestraCiclo = !esEgresado && !esTitulado;
+
+  const perfilExtra = muestraCiclo
+    ? `<div><strong>Ciclo:</strong> ${data.ciclo || '—'}</div>`
+    : `<div><strong>Año egreso:</strong> ${data.anio_egreso || '—'}</div>
+       ${esTitulado ? `<div><strong>Año titulación:</strong> ${data.anio_titulacion || '—'}</div>` : ''}`;
+
+  const editExtra = muestraCiclo
+    ? `<div class="profile-field">
+         <label>${ESTUDIANTE_FIELD_LABELS.ciclo}</label>
+         <input type="text" name="ciclo" value="${escapeAttr(data.ciclo || '')}" placeholder="VI, VII, VIII">
+       </div>`
+    : `<div class="profile-field">
+         <label>${ESTUDIANTE_FIELD_LABELS.anio_egreso}</label>
+         <input type="number" name="anio_egreso" value="${escapeAttr(data.anio_egreso || '')}" placeholder="2023">
+       </div>
+       ${esTitulado ? `<div class="profile-field">
+         <label>${ESTUDIANTE_FIELD_LABELS.anio_titulacion}</label>
+         <input type="number" name="anio_titulacion" value="${escapeAttr(data.anio_titulacion || '')}" placeholder="2024">
+       </div>` : ''}`;
+
+  estudianteEditableKeys = getEditableKeysForPerfil(data);
+  container.innerHTML = `
+    <div class="profile-hero">
+      <div style="display:flex;gap:14px;align-items:flex-start;flex:1;min-width:240px;">
+        <div class="avatar" style="width:56px;height:56px;font-size:1.1rem;">${initials(nombre)}</div>
+        <div>
+          <h3>${nombre}</h3>
+          <div style="font-size:.85rem;color:var(--text-muted);">${data.carrera} · ${capitalize(data.tipo)}</div>
+          <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">${tipoBadge(data.tipo)}</div>
+        </div>
+      </div>
+      <div style="min-width:200px;font-size:.83rem;color:var(--text-soft);">
+        <div><strong>DNI:</strong> ${data.dni}</div>
+        <div><strong>Código:</strong> ${data.codigo_estudiante}</div>
+        ${perfilExtra}
+      </div>
+    </div>
+    <div class="profile-card" style="margin:16px 0;">
+      <div class="profile-meta-grid">
+        <div><span>Correo</span><strong>${data.correo}</strong></div>
+        <div><span>Teléfono</span><strong>${data.telefono || '—'}</strong></div>
+        <div><span>Dirección</span><strong>${data.direccion || '—'}</strong></div>
+        <div><span>Habilidades</span><strong>${data.habilidades || 'Agrega tus habilidades'}</strong></div>
+        <div><span>Nacionalidad</span><strong>${data.nacionalidad || '—'}</strong></div>
+        <div><span>Estado civil</span><strong>${data.estado_civil ? capitalize(data.estado_civil) : '—'}</strong></div>
+        <div><span>Fecha de nacimiento</span><strong>${data.fecha_nacimiento ? formatDate(data.fecha_nacimiento) : '—'}</strong></div>
+      </div>
+    </div>
+    ${pending ? `<div class="pending-banner">⏳ Existe una solicitud pendiente. El administrador debe validarla antes de aplicar cambios.</div>` : ''}
+    <div class="profile-edit-grid">
+      <div class="profile-card">
+        <h4>Solicitar cambios a tu perfil</h4>
+        <p style="font-size:.82rem;color:var(--text-muted);">Actualiza tus datos de contacto y habilidades. El administrador revisará cada cambio antes de publicar la información.</p>
+        <form id="estudianteEditForm">
+          <div class="profile-field">
+            <label>${ESTUDIANTE_FIELD_LABELS.correo}</label>
+            <input type="email" name="correo" value="${escapeAttr(data.correo || '')}" placeholder="tu-correo@ldv.edu.pe" autocomplete="email">
+          </div>
+          <div class="profile-field">
+            <label>${ESTUDIANTE_FIELD_LABELS.telefono}</label>
+            <input type="tel" name="telefono" value="${escapeAttr(data.telefono || '')}" placeholder="987654321">
+          </div>
+          <div class="profile-field">
+            <label>${ESTUDIANTE_FIELD_LABELS.direccion}</label>
+            <input type="text" name="direccion" value="${escapeAttr(data.direccion || '')}" placeholder="Urbanización, ciudad">
+          </div>
+          <div class="profile-field">
+            <label>${ESTUDIANTE_FIELD_LABELS.estado_civil}</label>
+            <input type="text" name="estado_civil" value="${escapeAttr(data.estado_civil || '')}" placeholder="Soltero, Casado, etc.">
+          </div>
+          <div class="profile-field">
+            <label>${ESTUDIANTE_FIELD_LABELS.password}</label>
+            <input type="password" name="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+            <small style="display:block;margin-top:4px;font-size:.72rem;color:var(--text-muted);">Deja el campo vacío si no deseas actualizarla.</small>
+          </div>
+          ${editExtra}
+          <div class="profile-field">
+            <label>${ESTUDIANTE_FIELD_LABELS.habilidades}</label>
+            <textarea name="habilidades" placeholder="Ej: Python, Excel, Atención al cliente">${escapeAttr(data.habilidades || '')}</textarea>
+          </div>
+          <div class="profile-field">
+            <label>Motivo para el administrador</label>
+            <textarea name="motivo" placeholder="Describe por qué solicitas estos cambios"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Enviar solicitud</button>
+        </form>
+      </div>
+      <div class="profile-card request-card">
+        <h4>Historial de solicitudes</h4>
+        <div id="estudianteRequests">${buildSolicitudHistory(solicitudes)}</div>
+      </div>
+    </div>`;
+
+  const form = document.getElementById('estudianteEditForm');
+  if (form) {
+    const draft = readDraft(EST_PERFIL_DRAFT_KEY);
+    applyFormValues(form, draft);
+    bindDraftHandlers(form, EST_PERFIL_DRAFT_KEY);
+    form.addEventListener('submit', handleEstudianteSolicitudSubmit);
+  }
+}
+
+async function handleEstudianteSolicitudSubmit(e) {
+  e.preventDefault();
+  if (!perfilData) return;
+  const form = e.target;
+  const payload = {};
+  estudianteEditableKeys.forEach(key => {
+    const value = form.elements[key]?.value?.trim() || '';
+    const current = (perfilData[key] || '').toString();
+    if (value && value !== current) payload[key] = value;
+  });
+  if (!Object.keys(payload).length) {
+    toast('Modifica al menos un campo antes de enviar.', 'info');
+    return;
+  }
+  const body = {
+    campos: payload,
+    motivo: form.elements.motivo?.value?.trim() || ''
+  };
+  const btn = form.querySelector('button[type="submit"]');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Enviando...'; }
+  try {
+    await apiFetch('/perfil/solicitudes', { method: 'POST', body: JSON.stringify(body) });
+    toast('Solicitud enviada para validación.', 'success');
+    clearDraft(EST_PERFIL_DRAFT_KEY);
+    await loadPerfil(true);
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Enviar solicitud'; }
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// PROFILE INIT
+// ════════════════════════════════════════════════════════
+async function initProfile() {
+  try {
+    perfilData = await apiFetch('/estudiantes/perfil');
+    const nombre = `${perfilData.nombres} ${perfilData.apellidos}`;
+
+    document.getElementById('estNombreNav').textContent  = nombre;
+    document.getElementById('tipoBadgeNav').innerHTML    = tipoBadge(perfilData.tipo);
+    document.getElementById('sideAvatar').textContent   = initials(nombre);
+    document.getElementById('sideNombre').textContent   = nombre;
+    document.getElementById('sideTipo').textContent     = capitalize(perfilData.tipo);
+    document.getElementById('welcomeAvatar').textContent = initials(nombre);
+    document.getElementById('welcomeName').textContent   = nombre;
+    document.getElementById('welcomeInfo').textContent   = `${perfilData.carrera} · ${capitalize(perfilData.tipo)}`;
+    const esEgresado = perfilData.tipo === 'egresado';
+    const esTitulado = perfilData.tipo === 'titulado';
+    const muestraCiclo = !esEgresado && !esTitulado;
+
+    document.getElementById('welcomeBadges').innerHTML   =
+      `${tipoBadge(perfilData.tipo)}
+       ${muestraCiclo && perfilData.ciclo ? `<span class="badge badge-gray">📚 ${perfilData.ciclo}</span>` : ''}
+       ${!muestraCiclo && perfilData.anio_egreso ? `<span class="badge badge-gray">🎓 Egreso ${perfilData.anio_egreso}</span>` : ''}
+       ${esTitulado && perfilData.anio_titulacion ? `<span class="badge badge-gray">🏅 Titulación ${perfilData.anio_titulacion}</span>` : ''}
+       ${perfilData.carrera ? `<span class="badge badge-blue" style="font-size:.68rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;">🎓 ${perfilData.carrera}</span>` : ''}`;
+
+    let metaHtml = `
+      <div class="meta-card"><span class="meta-label">Carrera</span><span class="meta-value">${perfilData.carrera||'—'}</span></div>
+      <div class="meta-card"><span class="meta-label">Perfil</span><span class="meta-value">${capitalize(perfilData.tipo)}</span></div>`;
+    if (muestraCiclo) {
+      metaHtml += `<div class="meta-card"><span class="meta-label">Ciclo</span><span class="meta-value">${perfilData.ciclo||'—'}</span></div>`;
+    } else {
+      metaHtml += `<div class="meta-card"><span class="meta-label">Año egreso</span><span class="meta-value">${perfilData.anio_egreso||'—'}</span></div>`;
+      if (esTitulado) {
+        metaHtml += `<div class="meta-card"><span class="meta-label">Año titulación</span><span class="meta-value">${perfilData.anio_titulacion||'—'}</span></div>`;
+      }
+    }
+    document.getElementById('welcomeMeta').innerHTML = metaHtml;
+    document.getElementById('welcomeHero').style.display = 'flex';
+    document.getElementById('matchTipo').textContent = capitalize(perfilData.tipo);
+    document.getElementById('matchNotice').style.display = 'flex';
+    loadOfertas();
+  } catch(e) { loadOfertas(); }
+}
+
+function getProfileFilter() {
+  return (!mostrarTodas && perfilData) ? perfilData.tipo : null;
+}
+
+function toggleFiltroPersonalizado() {
+  mostrarTodas = !mostrarTodas;
+  const btn = document.getElementById('btnFiltroAll');
+  if (mostrarTodas) {
+    btn.textContent = '🎯 Solo mi perfil';
+    btn.classList.add('btn-primary'); btn.classList.remove('btn-ghost');
+    document.getElementById('matchNotice').style.display = 'none';
+  } else {
+    btn.textContent = '🌐 Ver todas las ofertas';
+    btn.classList.remove('btn-primary'); btn.classList.add('btn-ghost');
+    document.getElementById('matchNotice').style.display = perfilData ? 'flex' : 'none';
+  }
+  loadOfertas();
+}
+
+// ════════════════════════════════════════════════════════
+// OFFERS
+// ════════════════════════════════════════════════════════
+async function loadOfertas(resetPage = true) {
+  const tipo   = document.getElementById('filtroTipo').value;
+  const modal  = document.getElementById('filtroModalidad').value;
+  const perfil = getProfileFilter();
+  let url = '/api/ofertas?1=1';
+  if (tipo)   url += '&tipo='       + tipo;
+  if (modal)  url += '&modalidad='  + modal;
+  if (perfil) url += '&dirigido_a=' + perfil;
+  try {
+    const data = await fetch(url).then(r => r.json());
+    ofertasCargadas = data;
+    if (resetPage) LIST_PAGES.ofertas = 1;
+    renderOfertas(data);
+    if (perfilData) {
+      document.getElementById('ofertasSubtitle').textContent = mostrarTodas
+        ? `${data.length} oferta${data.length!==1?'s':''} disponibles en total`
+        : `${data.length} oferta${data.length!==1?'s':''} compatibles con tu perfil de ${capitalize(perfilData.tipo)}`;
+    }
+  } catch(e) {
+    document.getElementById('ofertasGrid').innerHTML = '<div class="alert alert-error show">No pudimos cargar las ofertas.</div>';
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al cargar ofertas',
+      text: e.message || 'Por favor vuelve a intentarlo.',
+      confirmButtonColor: '#ef4444'
+    });
+  }
+}
+
+function filterOfertas() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  LIST_PAGES.ofertas = 1;
+  if (!q) { renderOfertas(ofertasCargadas); return; }
+  renderOfertas(ofertasCargadas.filter(o =>
+    o.titulo.toLowerCase().includes(q) ||
+    (o.nombre_empresa||'').toLowerCase().includes(q) ||
+    (o.carrera_afin||'').toLowerCase().includes(q) ||
+    (o.descripcion||'').toLowerCase().includes(q)
+  ));
+}
+
+function renderOfertas(data) {
+  currentOffersView = Array.isArray(data) ? data : [];
+  const pageData = paginateData(currentOffersView, 'ofertas');
+  const el = document.getElementById('ofertasGrid');
+  document.getElementById('resultCount').textContent = pageData.totalItems
+    ? `${pageData.totalItems} oferta${pageData.totalItems!==1?'s':''} encontrada${pageData.totalItems!==1?'s':''}`
+    : '';
+  if (!pageData.totalItems) {
+    el.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-state-icon">🔍</div>
+      <h3>No hay ofertas disponibles</h3>
+      <p>Ajusta los filtros o activa "Ver todas las ofertas".</p>
+    </div>`;
+    renderPagination('ofertas', 0, 1, 1);
+    return;
+  }
+  el.innerHTML = pageData.items.map(o => buildJobCard(o)).join('');
+  renderPagination('ofertas', pageData.totalItems, pageData.page, pageData.totalPages);
+}
+
+function isMatchForProfile(o) {
+  if (!perfilData) return false;
+  return o.dirigido_a === perfilData.tipo || o.dirigido_a === 'todos';
+}
+
+function buildJobCard(o) {
+  const isMatch = isMatchForProfile(o);
+  return `
+  <div class="job-card" onclick="verDetalle(${o.id})">
+    <div class="match-bar">
+      <div class="match-bar-fill" style="width:${isMatch ? '100' : '55'}%"></div>
+    </div>
+    <div class="job-card-top">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:11px;">
+        <div style="display:flex;align-items:center;gap:9px;">
+          <div class="company-avatar">${initials(o.nombre_empresa||'E')}</div>
+          <div>
+            <div class="company-name">${o.nombre_empresa||'—'}</div>
+            <div style="font-size:.72rem;color:var(--text-muted);">${o.sector||''}</div>
+          </div>
+        </div>
+        ${isMatch ? `<span class="match-pill" style="font-size:.67rem;flex-shrink:0;">tu perfil</span>` : ''}
+      </div>
+      <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--text);letter-spacing:-0.02em;margin-bottom:7px;line-height:1.25;">${o.titulo}</div>
+      <p style="font-size:.82rem;color:var(--text-soft);margin-bottom:9px;line-height:1.55;">${truncate(o.descripcion, 100)}</p>
+      ${o.carrera_afin ? `<div style="font-size:.76rem;color:var(--blue-400);margin-bottom:9px;">📚 ${o.carrera_afin}</div>` : ''}
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
+        ${tipoBadge(o.tipo_oferta)} ${tipoBadge(o.dirigido_a)} ${tipoBadge(o.modalidad)}
+        ${o.salario_rango ? `<span class="badge badge-green">💰 ${o.salario_rango}</span>` : ''}
+        ${o.vacantes ? `<span class="badge badge-gray">${o.vacantes} vacante${o.vacantes>1?'s':''}</span>` : ''}
+      </div>
+    </div>
+    <div class="job-card-bottom">
+      <span style="font-size:.73rem;color:var(--text-muted);">
+        📅 ${o.fecha_limite ? 'Hasta ' + formatDate(o.fecha_limite) : 'Sin fecha límite'}
+      </span>
+      <div style="display:flex;gap:5px;">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();verDetalle(${o.id})">Detalle</button>
+        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();abrirPostular(${o.id},'${(o.titulo||'').replace(/'/g,"\\'")}','${o.tipo_oferta}','${o.dirigido_a}')">
+          Postular →
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// DETAIL & APPLY MODALS
+// ════════════════════════════════════════════════════════
+function verDetalle(id) {
+  const o = ofertasCargadas.find(x => x.id === id);
+  if (!o) return;
+  document.getElementById('detalleTitle').textContent = o.titulo;
+  document.getElementById('detalleContent').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      <div class="company-avatar" style="width:44px;height:44px;">${initials(o.nombre_empresa||'E')}</div>
+      <div>
+        <div style="font-weight:700;font-size:.95rem;">${o.nombre_empresa}</div>
+        <div style="font-size:.78rem;color:var(--text-muted);">${o.sector||''}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;">
+      ${tipoBadge(o.tipo_oferta)} ${tipoBadge(o.dirigido_a)} ${tipoBadge(o.modalidad)}
+    </div>
+    <div class="info-row" style="margin-bottom:14px;">
+      ${o.vacantes  ? `<span class="info-item">👤 ${o.vacantes} vacante${o.vacantes>1?'s':''}</span>` : ''}
+      ${o.horario   ? `<span class="info-item">⏰ ${o.horario}</span>` : ''}
+      ${o.salario_rango ? `<span class="info-item">💰 ${o.salario_rango}</span>` : ''}
+    </div>
+    ${o.carrera_afin ? `<div style="font-size:.82rem;color:var(--blue-400);margin-bottom:14px;">📚 Carreras afines: <strong>${o.carrera_afin}</strong></div>` : ''}
+    <div class="divider"></div>
+    <div class="detail-section">
+      <div class="detail-section-title">Descripción del puesto</div>
+      <div class="detail-section-body">${o.descripcion||'—'}</div>
+    </div>
+    ${o.requisitos ? `<div class="detail-section"><div class="detail-section-title">Requisitos</div><div class="detail-section-body">${o.requisitos}</div></div>` : ''}
+    ${o.beneficios ? `<div class="detail-section"><div class="detail-section-title">Beneficios</div><div class="detail-section-body">${o.beneficios}</div></div>` : ''}
+    ${o.fecha_limite ? `<div class="divider"></div><p style="font-size:.78rem;color:var(--text-muted);">📅 Fecha límite: <strong>${formatDate(o.fecha_limite)}</strong></p>` : ''}
+    <button class="btn btn-primary" style="width:100%;margin-top:18px;"
+      onclick="closeModal('modalDetalleFull'); abrirPostular(${o.id},'${(o.titulo||'').replace(/'/g,"\\'")}','${o.tipo_oferta}','${o.dirigido_a}')">
+      🚀 Postular a esta oferta
+    </button>`;
+  document.getElementById('modalDetalleFull').classList.add('open');
+}
+
+async function abrirPostular(id, titulo, tipo, dirigido) {
+  const ofertaId = Number(id);
+  if (!appliedOffersLoaded) await loadMisPostulaciones();
+  if (appliedOfferIds.has(ofertaId)) {
+    await Swal.fire({
+      icon: 'info', title: 'Ya postulaste',
+      text: 'Ya enviaste tu postulación para esta oferta. Revisa "Mis Postulaciones" para ver su estado.',
+      confirmButtonColor: '#1d6fe8', confirmButtonText: 'Entendido'
+    });
+    return;
+  }
+  document.getElementById('postularOfertaId').value = id;
+  document.getElementById('modalTitulo').textContent = titulo;
+  document.getElementById('modalDetalle').innerHTML = `<div style="display:flex;gap:5px;">${tipoBadge(tipo)} ${tipoBadge(dirigido)}</div>`;
+  document.getElementById('alertPostular').className = 'alert';
+  document.getElementById('cvFileName').textContent = '';
+  document.getElementById('fileDropZone').classList.remove('has-file');
+  document.getElementById('formPostular').reset();
+  document.getElementById('modalPostular').classList.add('open');
+}
+
+document.getElementById('modalPostular').addEventListener('click', e => {
+  if (e.target.id === 'modalPostular') closeModal('modalPostular');
+});
+document.getElementById('modalDetalleFull').addEventListener('click', e => {
+  if (e.target.id === 'modalDetalleFull') closeModal('modalDetalleFull');
+});
+
+function isPdfFile(file) {
+  if (!file) return false;
+  const name = (file.name || '').toLowerCase();
+  const type = (file.type || '').toLowerCase();
+  return type === 'application/pdf' || name.endsWith('.pdf');
+}
+
+document.getElementById('cvFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file && !isPdfFile(file)) {
+    e.target.value = '';
+    document.getElementById('cvFileName').textContent = '';
+    document.getElementById('fileDropZone').classList.remove('has-file');
+    toast('Solo se permiten archivos PDF.', 'warning');
+    return;
+  }
+  const name = file?.name || '';
+  document.getElementById('cvFileName').textContent = name ? '✓ ' + name : '';
+  document.getElementById('fileDropZone').classList.toggle('has-file', !!name);
+});
+
+document.getElementById('formPostular').addEventListener('submit', async e => {
+  e.preventDefault();
+  const file = document.getElementById('cvFile').files[0];
+  if (!isPdfFile(file)) {
+    toast('Solo se permiten archivos PDF.', 'warning');
+    return;
+  }
+  const btn = document.getElementById('btnPostular');
+  btn.innerHTML = '<span class="spinner"></span> Enviando...'; btn.disabled = true;
+  const fd = new FormData(e.target);
+  const ofertaId = Number(fd.get('oferta_id'));
+  let stopLoading = () => {};
+  try {
+    stopLoading = processingAlert('Enviando tu postulación...');
+    const res = await fetch('/api/postulaciones', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + Auth.getToken() },
+      body: fd
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al enviar');
+    stopLoading();
+    closeModal('modalPostular');
+    await Swal.fire({
+      title: '¡Postulación enviada!',
+      html: '<p style="font-size:.9rem;color:#4a6a8a;">Tu postulación fue enviada. La empresa revisará tu CV y carta de presentación.</p>',
+      icon: 'success', confirmButtonText: 'Ver mis postulaciones', confirmButtonColor: '#1d6fe8'
+    });
+    appliedOfferIds.add(ofertaId);
+    appliedOffersLoaded = true;
+    await loadMisPostulaciones();
+    showSection('postulaciones');
+  } catch(err) {
+    stopLoading();
+    await Swal.fire({
+      icon: 'error',
+      title: 'No pudimos enviar tu postulación',
+      text: err.message || 'Intenta subir tu CV nuevamente.',
+      confirmButtonColor: '#ef4444'
+    });
+  }
+  btn.innerHTML = '🚀 Enviar postulación'; btn.disabled = false;
+});
+
+// ════════════════════════════════════════════════════════
+// MIS POSTULACIONES
+// ════════════════════════════════════════════════════════
+async function loadMisPostulaciones() {
+  try {
+    misPostData = await apiFetch('/postulaciones/mias');
+
+    const ids = misPostData.map(p => Number(p.oferta_id ?? 0)).filter(id => id > 0);
+    appliedOfferIds   = new Set(ids);
+    appliedOffersLoaded = true;
+
+    document.getElementById('badgePost').textContent = misPostData.length;
+
+    const c = {
+      enviada:     misPostData.filter(p => p.estado === 'enviada').length,
+      en_revision: misPostData.filter(p => p.estado === 'en_revision').length,
+      // Preseleccionado: empresa te eligió, sin cerrar
+      presel:      misPostData.filter(p => p.estado === 'seleccionado' && !p.cerrada).length,
+      // Contratado: proceso cerrado
+      contratado:  misPostData.filter(p => p.estado === 'seleccionado' && p.cerrada).length,
+      rechazado:   misPostData.filter(p => p.estado === 'rechazado').length
+    };
+
+    // Hero stats
+    const heroPost = document.getElementById('statHeroPost');
+    const heroRev  = document.getElementById('statHeroRevision');
+    const heroSel  = document.getElementById('statHeroSel');
+    if (heroPost) heroPost.textContent = misPostData.length;
+    if (heroRev)  heroRev.textContent  = c.en_revision;
+    if (heroSel)  heroSel.textContent  = c.presel + c.contratado;
+
+    if (misPostData.length) {
+      document.getElementById('pipelineBar').style.display = 'flex';
+      document.getElementById('statusTabs').style.display   = 'flex';
+      document.getElementById('pn-enviada').textContent  = c.enviada;
+      document.getElementById('pn-revision').textContent = c.en_revision;
+      document.getElementById('pn-presel').textContent   = c.presel;
+      document.getElementById('pn-cont').textContent     = c.contratado;
+      document.getElementById('pn-rej').textContent      = c.rechazado;
+
+      // Pipeline visual states
+      document.querySelectorAll('.pipeline-step').forEach(step => {
+        step.classList.remove('active', 'active-amber', 'done', 'active-red');
+      });
+      if (c.presel > 0)    document.getElementById('pipe-presel').classList.add('active-amber');
+      if (c.contratado > 0) document.getElementById('pipe-cont').classList.add('done');
+      if (c.en_revision > 0) document.getElementById('pipe-revision').classList.add('active');
+      if (c.rechazado > 0) document.getElementById('pipe-rej').classList.add('active-red');
+    }
+
+    applyMisPostFilter(currentPostFilter, false);
+  } catch(e) {
+    Swal.fire({
+      icon: 'error',
+      title: 'No pudimos cargar tus postulaciones',
+      text: e.message || 'Intenta nuevamente en unos segundos.',
+      confirmButtonColor: '#ef4444'
+    });
+  }
+}
+
+function updatePostFilterUI(estado) {
+  document.querySelectorAll('.status-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.filter === estado);
+  });
+  document.querySelectorAll('.pipeline-step').forEach(step => {
+    step.classList.toggle('selected', step.dataset.filter === estado);
+  });
+}
+
+function applyMisPostFilter(estado, resetPage = true) {
+  currentPostFilter = estado;
+  updatePostFilterUI(estado);
+  if (resetPage) LIST_PAGES.postulaciones = 1;
+  let filtered;
+  if (estado === 'todos') filtered = misPostData;
+  else if (estado === 'preseleccionado') filtered = misPostData.filter(p => p.estado === 'seleccionado' && !p.cerrada);
+  else if (estado === 'contratado')      filtered = misPostData.filter(p => p.estado === 'seleccionado' && p.cerrada);
+  else filtered = misPostData.filter(p => p.estado === estado);
+  renderMisPostulaciones(filtered);
+}
+
+function togglePostFiltro(estado) {
+  const next = currentPostFilter === estado ? 'todos' : estado;
+  applyMisPostFilter(next);
+}
+
+function filtrarMisPost(estado, btn) {
+  applyMisPostFilter(estado);
+}
+
+function renderMisPostulaciones(data) {
+  currentPostView = Array.isArray(data) ? data : [];
+  const pageData = paginateData(currentPostView, 'postulaciones');
+  const el = document.getElementById('misPostulaciones');
+  if (!pageData.totalItems) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📨</div>
+      <h3>Sin postulaciones${misPostData.length ? ' con este estado' : ''}</h3>
+      <p>${misPostData.length ? 'Cambia el filtro.' : 'Ve a "Buscar Ofertas" y postula a las que te interesen.'}</p>
+    </div>`;
+    renderPagination('postulaciones', 0, 1, 1);
+    return;
+  }
+
+  el.innerHTML = pageData.items.map(p => {
+    // Determine row class and status
+    let rowClass = '', statusBadgeHtml = '', statusMessage = '';
+
+    if (p.estado === 'seleccionado' && p.cerrada) {
+      // CONTRATADO — proceso completado
+      rowClass = 'contratado';
+      statusBadgeHtml = `<span class="badge badge-green">✅ Contratado</span>`;
+      statusMessage = `
+      <div style="width:100%;margin-top:8px;padding:11px 14px;background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.2);border-radius:10px;font-size:.84rem;color:#065f46;">
+        🎉 <strong>¡Felicitaciones! Fuiste contratado.</strong><br>
+        Tu carta de aceptación oficial fue emitida por el Instituto Leonardo Da Vinci y el proceso de contratación fue cerrado exitosamente.
+      </div>`;
+    } else if (p.estado === 'seleccionado' && !p.cerrada) {
+      // PRESELECCIONADO — empresa te eligió, esperando carta
+      rowClass = 'preseleccionado';
+      statusBadgeHtml = `<span class="badge badge-yellow">⏳ Preseleccionado</span>`;
+      statusMessage = `
+      <div style="width:100%;margin-top:8px;padding:11px 14px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);border-radius:10px;font-size:.84rem;color:#92400e;">
+        🎯 <strong>¡La empresa te eligió!</strong> Estás en proceso de contratación.<br>
+        El Instituto Leonardo Da Vinci está gestionando tu <strong>Carta de Aceptación oficial</strong>. Te notificaremos cuando el proceso esté cerrado.
+      </div>`;
+    } else if (p.estado === 'en_revision') {
+      statusBadgeHtml = `<span class="badge badge-yellow">🔍 En revisión</span>`;
+    } else if (p.estado === 'rechazado') {
+      rowClass = 'rechazado';
+      statusBadgeHtml = `<span class="badge badge-red">❌ No seleccionado</span>`;
+      statusMessage = `
+      <div style="width:100%;font-size:.8rem;color:var(--text-muted);margin-top:6px;">
+        No fuiste seleccionado en esta oportunidad. ¡Sigue postulando — hay muchas más oportunidades!
+      </div>`;
+    } else {
+      statusBadgeHtml = `<span class="badge badge-blue">📨 Enviada</span>`;
+    }
+
+    return `
+    <div class="my-post-row ${rowClass}">
+      <div class="company-avatar" style="flex-shrink:0;">${initials(p.razon_social||'E')}</div>
+      <div style="flex:1;min-width:140px;">
+        <div style="font-family:var(--font-display);font-weight:700;font-size:.94rem;">${p.titulo}</div>
+        <div style="font-size:.78rem;color:var(--text-muted);margin-top:2px;">${p.razon_social} · ${tipoBadge(p.tipo_oferta)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+        ${statusBadgeHtml}
+        <span style="font-size:.74rem;color:var(--text-muted);">${timeAgo(p.fecha_postulacion)}</span>
+        <button type="button" class="btn btn-ghost btn-xs" onclick="openCv(${p.id})">📄 CV</button>
+      </div>
+      ${statusMessage}
+    </div>`;
+  }).join('');
+  renderPagination('postulaciones', pageData.totalItems, pageData.page, pageData.totalPages);
+}
+
+// ════════════════════════════════════════════════════════
+// PERFIL
+// ════════════════════════════════════════════════════════
+async function loadPerfil(force = false) {
+  try {
+    if (force || !perfilData) perfilData = await apiFetch('/estudiantes/perfil');
+    perfilSolicitudes = await apiFetch('/perfil/solicitudes');
+    renderPerfilEstudiante(perfilData, perfilSolicitudes);
+  } catch(e) {
+    const container = document.getElementById('perfilData');
+    if (container) container.innerHTML = `<div class="card"><div class="alert alert-error show">${e.message || 'No pudimos cargar tu perfil.'}</div></div>`;
+  }
+}
+
+// Init
+initProfile();
+loadMisPostulaciones();
+scheduleAutoRefresh();
+</script>
+</body>
+</html>

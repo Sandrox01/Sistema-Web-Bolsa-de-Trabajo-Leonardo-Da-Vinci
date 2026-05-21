@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ofertas de Trabajo — Bolsa LDV</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <style>
+        .page-hero {
+            padding: 110px 5% 50px;
+            background: radial-gradient(ellipse 50% 40% at 50% 0, rgba(29,111,232,0.10), transparent 70%);
+            border-bottom: 1px solid var(--border);
+        }
+        .page-hero h1 em { color: var(--accent); }
+        .filters-panel {
+            background: linear-gradient(180deg, #ffffff 0%, #f6f9ff 100%);
+            border: 1px solid rgba(29,111,232,0.18);
+            border-radius: var(--radius-lg); padding: 18px 20px;
+            margin-bottom: 28px; box-shadow: var(--shadow-sm);
+            display: grid; gap: 14px;
+        }
+        .filters-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .filters-title { font-size:.9rem; font-weight:700; color:var(--navy-700); letter-spacing:-0.01em; }
+        .filters-hint { font-size:.78rem; color:var(--text-muted); margin-top:2px; }
+        .filters-row {
+            display:grid; grid-template-columns: 1.6fr repeat(2, minmax(140px, 1fr));
+            gap: 14px; align-items:end;
+        }
+        .filter-chips { display:flex; gap:8px; flex-wrap:wrap; }
+        .filter-chip {
+            border:1px solid rgba(29,111,232,0.18); background:#fff; color:var(--text-muted);
+            border-radius:999px; padding:6px 12px; font-size:.75rem; font-weight:600;
+            cursor:pointer; transition: all .18s; font-family: var(--font-body);
+        }
+        .filter-chip.active {
+            background: var(--accent-dim); color: var(--accent);
+            border-color: rgba(29,111,232,0.35);
+            box-shadow: 0 6px 14px rgba(29,111,232,0.15);
+        }
+        .filters-panel .form-control {
+            background:#fff; border:1.5px solid rgba(29,111,232,0.16); border-radius:12px;
+            padding:10px 12px; font-size:.85rem; box-shadow: var(--shadow-xs);
+        }
+        .filters-panel .search-bar { border-radius:12px; border-color: rgba(29,111,232,0.18); }
+        .filters-panel .search-bar input { font-size:.9rem; }
+        @media(max-width:980px) { .filters-row { grid-template-columns: 1fr 1fr; } }
+        @media(max-width:640px) { .filters-row { grid-template-columns: 1fr; } .filters-head { flex-direction: column; align-items:flex-start; } }
+        .offers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .content-wrap { padding: 36px 5% 60px; }
+        .result-count { font-size: .83rem; color: var(--text-muted); margin-bottom: 20px; }
+        /* Offer card company row */
+        .offer-company { display: flex; align-items: center; gap: 10px; }
+        .offer-card { cursor: pointer; }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="navbar-brand">
+        <div class="navbar-logo">LV</div>
+        <div><div class="navbar-title">Leonardo <span>Da Vinci</span></div></div>
+    </div>
+    <div class="navbar-links">
+        <a href="/">Inicio</a>
+        <a href="/ofertas" style="color:var(--accent); font-weight:700;">Ofertas</a>
+    </div>
+    <div class="navbar-links" id="navActions">
+        <a href="/login" class="btn btn-ghost btn-sm">Iniciar sesión</a>
+        <a href="/registro" class="btn btn-primary btn-sm">Registrarse</a>
+    </div>
+</nav>
+
+<div class="page-hero">
+    <h1>Ofertas <em>disponibles</em></h1>
+    <p style="margin-top:10px;color:var(--text-soft);max-width:500px;">Explora oportunidades de trabajo y prácticas profesionales para practicantes, egresados y titulados del Instituto LDV.</p>
+</div>
+
+<div class="content-wrap">
+    <div class="filters-panel">
+        <div class="filters-head">
+            <div>
+                <div class="filters-title">Buscar y filtrar ofertas</div>
+                <div class="filters-hint">Encuentra oportunidades por tipo, modalidad o perfil.</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="clearFilters()">✕ Limpiar</button>
+        </div>
+        <div class="filter-chips" id="tipoChips">
+            <button type="button" class="filter-chip active" data-value="" onclick="setTipoChip('')">Todas</button>
+            <button type="button" class="filter-chip" data-value="practicas" onclick="setTipoChip('practicas')">🎓 Prácticas</button>
+            <button type="button" class="filter-chip" data-value="trabajo" onclick="setTipoChip('trabajo')">💼 Trabajo</button>
+        </div>
+        <input type="hidden" id="filtroTipo" value="">
+        <div class="filters-row">
+            <div class="form-group" style="margin:0;">
+                <label class="form-label">Buscar</label>
+                <div class="search-bar">
+                    <input type="text" id="searchQ" placeholder="Buscar por puesto, empresa..." oninput="debounceLoad()">
+                    <button>🔍</button>
+                </div>
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label class="form-label">Modalidad</label>
+                <select class="form-control" id="filtroModal" onchange="loadOfertas()">
+                    <option value="">Todas</option>
+                    <option value="presencial">Presencial</option>
+                    <option value="remoto">Remoto</option>
+                    <option value="hibrido">Híbrido</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label class="form-label">Perfil</label>
+                <select class="form-control" id="filtroDir" onchange="loadOfertas()">
+                    <option value="">Todos</option>
+                    <option value="practicante">Practicantes</option>
+                    <option value="egresado">Egresados</option>
+                    <option value="titulado">Titulados</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="result-count" id="resultCount"></div>
+    <div class="offers-grid" id="offersGrid">
+        <div class="empty-state" style="grid-column:1/-1">
+            <div class="empty-state-icon">⏳</div>
+            <h3>Cargando ofertas...</h3>
+        </div>
+    </div>
+    <div class="table-pagination" id="offersPager"></div>
+</div>
+
+<div class="modal-overlay" id="modalOfferDetail">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalOfferTitle">Detalle de la oferta</h3>
+            <button class="modal-close" onclick="closeOfferDetail()">×</button>
+        </div>
+        <div id="modalOfferBody"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/global.js"></script>
+<script>
+let debounceTimer;
+const PAGE_SIZE = 10;
+let offersPage = 1;
+let offersCache = [];
+
+function clampPage(page, totalPages) {
+    return Math.min(Math.max(1, page), totalPages);
+}
+
+function paginateData(data) {
+    const totalItems = data.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+    const page = clampPage(offersPage, totalPages);
+    offersPage = page;
+    const start = (page - 1) * PAGE_SIZE;
+    return { items: data.slice(start, start + PAGE_SIZE), page, totalPages, totalItems };
+}
+
+function getPagerPages(current, total) {
+    const pages = [];
+    for (let p = 1; p <= total; p += 1) {
+        if (p === 1 || p === total || Math.abs(p - current) <= 1) pages.push(p);
+    }
+    return pages;
+}
+
+function renderOffersPager(totalItems, page, totalPages) {
+    const container = document.getElementById('offersPager');
+    if (!container) return;
+    if (totalItems <= PAGE_SIZE) {
+        container.innerHTML = '';
+        return;
+    }
+    const pages = getPagerPages(page, totalPages);
+    let html = '<div class="pager-group">';
+    html += `<button class="pager-btn" ${page <= 1 ? 'disabled' : ''} onclick="setOffersPage(${page - 1})">Anterior</button>`;
+    let last = 0;
+    pages.forEach(p => {
+        if (p - last > 1) html += '<span class="pager-ellipsis">...</span>';
+        html += `<button class="pager-btn ${p === page ? 'active' : ''}" onclick="setOffersPage(${p})">${p}</button>`;
+        last = p;
+    });
+    html += `<button class="pager-btn" ${page >= totalPages ? 'disabled' : ''} onclick="setOffersPage(${page + 1})">Siguiente</button>`;
+    html += '</div>';
+    html += `<div class="pager-group">
+        <span class="pager-meta">Pagina ${page} de ${totalPages}</span>
+        <input class="pager-input" type="number" min="1" max="${totalPages}" id="pagerJump-ofertas" value="${page}">
+        <button class="pager-btn" onclick="jumpOffersPage()">Ir</button>
+    </div>`;
+    container.innerHTML = html;
+}
+
+function setOffersPage(page) {
+    offersPage = page;
+    renderOffers(offersCache);
+}
+
+function jumpOffersPage() {
+    const input = document.getElementById('pagerJump-ofertas');
+    if (!input) return;
+    const value = parseInt(input.value, 10);
+    if (Number.isNaN(value)) return;
+    setOffersPage(value);
+}
+function debounceLoad() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(loadOfertas, 350);
+}
+
+async function loadOfertas() {
+    const tipo  = document.getElementById('filtroTipo').value;
+    const modal = document.getElementById('filtroModal').value;
+    const dir   = document.getElementById('filtroDir').value;
+    const q     = document.getElementById('searchQ').value.trim();
+    let url = '/api/ofertas?1=1';
+    if (tipo)  url += '&tipo=' + tipo;
+    if (modal) url += '&modalidad=' + modal;
+    if (dir)   url += '&dirigido_a=' + dir;
+    if (q)     url += '&q=' + encodeURIComponent(q);
+    syncTipoChips();
+
+    const grid = document.getElementById('offersGrid');
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="spinner dark" style="width:22px;height:22px;margin:0 auto 10px;"></div><p>Cargando...</p></div>`;
+
+    try {
+        const data = await fetch(url).then(r => r.json());
+        offersCache = Array.isArray(data) ? data : [];
+        offersPage = 1;
+        const countEl = document.getElementById('resultCount');
+        countEl.textContent = offersCache.length
+            ? `${offersCache.length} oferta${offersCache.length !== 1 ? 's' : ''} encontrada${offersCache.length !== 1 ? 's' : ''}`
+            : '';
+
+        if (!offersCache.length || data.error) {
+            grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+                <div class="empty-state-icon">🔍</div>
+                <h3>No hay ofertas con esos filtros</h3>
+                <p>Intenta con otros criterios de búsqueda.</p>
+            </div>`;
+            renderOffersPager(0, 1, 1);
+            return;
+        }
+
+        renderOffers(offersCache);
+    } catch (e) {
+        grid.innerHTML = '<div class="alert alert-error show" style="grid-column:1/-1">⚠ Error al cargar las ofertas. Intenta de nuevo.</div>';
+    }
+}
+
+function renderOffers(data) {
+    const grid = document.getElementById('offersGrid');
+    const pageData = paginateData(data);
+    if (!pageData.totalItems) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+            <div class="empty-state-icon">🔍</div>
+            <h3>No hay ofertas con esos filtros</h3>
+            <p>Intenta con otros criterios de búsqueda.</p>
+        </div>`;
+        renderOffersPager(0, 1, 1);
+        return;
+    }
+    grid.innerHTML = pageData.items.map(o => `
+    <div class="offer-card" onclick="openOfferDetail(${o.id})">
+        <div class="offer-company">
+            <div class="company-avatar">${initials(o.nombre_empresa || 'E')}</div>
+            <div>
+                <div class="company-name">${o.nombre_empresa || '—'}</div>
+                <div style="font-size:.75rem;color:var(--text-muted);">${o.sector || ''}</div>
+            </div>
+        </div>
+        <div class="offer-title">${o.titulo}</div>
+        <p style="font-size:.84rem;color:var(--text-soft);line-height:1.55;">${truncate(o.descripcion, 120)}</p>
+        ${o.carrera_afin ? `<div style="font-size:.78rem;color:var(--accent);">📚 ${o.carrera_afin}</div>` : ''}
+        <div class="offer-tags">
+            ${tipoBadge(o.tipo_oferta)}
+            ${tipoBadge(o.dirigido_a)}
+            ${tipoBadge(o.modalidad)}
+            ${o.salario_rango ? `<span class="badge badge-green">💰 ${o.salario_rango}</span>` : ''}
+            ${o.vacantes ? `<span class="badge badge-gray">${o.vacantes} vacante${o.vacantes > 1 ? 's' : ''}</span>` : ''}
+        </div>
+        <div class="offer-footer">
+            <span style="font-size:.75rem;color:var(--text-muted);">
+                📅 ${o.fecha_limite ? 'Hasta ' + formatDate(o.fecha_limite) : 'Sin fecha límite'}
+            </span>
+            <a href="/login" class="btn btn-primary btn-sm" onclick="event.stopPropagation()">Postular →</a>
+        </div>
+    </div>`).join('');
+    renderOffersPager(pageData.totalItems, pageData.page, pageData.totalPages);
+}
+
+function openOfferDetail(id) {
+    const offer = offersCache.find(o => o.id === id);
+    if (!offer) return;
+    const title = document.getElementById('modalOfferTitle');
+    const body = document.getElementById('modalOfferBody');
+    if (title) title.textContent = offer.titulo || 'Detalle de la oferta';
+
+    body.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div class="company-avatar" style="width:44px;height:44px;">${initials(offer.nombre_empresa || 'E')}</div>
+            <div>
+                <div style="font-weight:700;font-size:.95rem;">${escapeHtml(offer.nombre_empresa || '—')}</div>
+                <div style="font-size:.78rem;color:var(--text-muted);">${escapeHtml(offer.sector || '')}</div>
+            </div>
+        </div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;">
+            ${tipoBadge(offer.tipo_oferta)} ${tipoBadge(offer.dirigido_a)} ${tipoBadge(offer.modalidad)}
+            ${offer.salario_rango ? `<span class="badge badge-green">💰 ${escapeHtml(offer.salario_rango)}</span>` : ''}
+            ${offer.vacantes ? `<span class="badge badge-gray">${offer.vacantes} vacante${offer.vacantes > 1 ? 's' : ''}</span>` : ''}
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-size:.82rem;color:var(--text-muted);">
+            ${offer.vacantes ? `<span>👤 ${offer.vacantes} vacante${offer.vacantes > 1 ? 's' : ''}</span>` : ''}
+            ${offer.horario ? `<span>⏰ ${escapeHtml(offer.horario)}</span>` : ''}
+            ${offer.fecha_limite ? `<span>📅 Hasta ${formatDate(offer.fecha_limite)}</span>` : '<span>📅 Sin fecha límite</span>'}
+        </div>
+        ${offer.carrera_afin ? `<div style="font-size:.82rem;color:var(--accent);margin-bottom:14px;">📚 Carreras afines: <strong>${escapeHtml(offer.carrera_afin)}</strong></div>` : ''}
+        <div style="border-top:1px solid var(--border);margin:10px 0 16px;"></div>
+        <div style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Descripción del puesto</div>
+        <div style="font-size:.9rem;color:var(--text-2);line-height:1.6;white-space:pre-wrap;">${escapeHtml(offer.descripcion || '—')}</div>
+        ${offer.requisitos ? `
+        <div style="margin-top:16px;">
+            <div style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Requisitos</div>
+            <div style="font-size:.9rem;color:var(--text-2);line-height:1.6;white-space:pre-wrap;">${escapeHtml(offer.requisitos)}</div>
+        </div>` : ''}
+        ${offer.beneficios ? `
+        <div style="margin-top:16px;">
+            <div style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Beneficios</div>
+            <div style="font-size:.9rem;color:var(--text-2);line-height:1.6;white-space:pre-wrap;">${escapeHtml(offer.beneficios)}</div>
+        </div>` : ''}
+        <div style="margin-top:18px;display:flex;justify-content:flex-end;">
+            <a href="/login" class="btn btn-primary">Postular →</a>
+        </div>
+    `;
+
+    document.getElementById('modalOfferDetail').classList.add('open');
+}
+
+function closeOfferDetail() {
+    document.getElementById('modalOfferDetail').classList.remove('open');
+}
+
+document.getElementById('modalOfferDetail').addEventListener('click', e => {
+    if (e.target.id === 'modalOfferDetail') closeOfferDetail();
+});
+
+function syncTipoChips() {
+    const tipo = document.getElementById('filtroTipo')?.value || '';
+    document.querySelectorAll('#tipoChips .filter-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === tipo);
+    });
+}
+
+function setTipoChip(value) {
+    const select = document.getElementById('filtroTipo');
+    if (select) select.value = value;
+    syncTipoChips();
+    loadOfertas();
+}
+
+function clearFilters() {
+    ['filtroTipo','filtroModal','filtroDir'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('searchQ').value = '';
+    syncTipoChips();
+    loadOfertas();
+}
+
+loadOfertas();
+</script>
+</body>
+</html>

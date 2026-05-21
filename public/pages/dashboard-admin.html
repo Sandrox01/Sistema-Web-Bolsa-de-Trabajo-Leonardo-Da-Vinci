@@ -1,0 +1,2324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrador — Bolsa LDV</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <style>
+        /* ── PRE-SELECCIÓN CARDS ─────────────────────────── */
+        .presel-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(139,92,246,0.22);
+            border-radius: var(--radius); padding: 24px;
+            margin-bottom: 16px; transition: all .2s;
+            position: relative; overflow: hidden;
+        }
+        .presel-card::before {
+            content: ''; position: absolute; top: 0; left: 0;
+            width: 4px; height: 100%;
+            background: linear-gradient(180deg, var(--purple), #6366f1);
+        }
+        .presel-card:hover { box-shadow: var(--shadow-md); border-color: rgba(139,92,246,.38); }
+        .presel-card .pc-header { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+        .presel-card .pc-info-grid {
+            display:grid; grid-template-columns:1fr 1fr; gap:10px;
+            font-size:.85rem; margin-bottom:12px;
+        }
+        .presel-card .pc-info-grid .info-item { display:flex; align-items:center; gap:6px; color:var(--text-soft); }
+        .presel-card .pc-actions {
+            display:flex; gap:8px; padding-top:14px;
+            border-top:1px solid var(--border); flex-wrap:wrap; align-items:center;
+        }
+        .presel-card .pc-carta-status {
+            font-size:.78rem; padding:8px 12px; border-radius:8px; margin-top:10px;
+        }
+        .presel-card .pc-carta-status.pendiente {
+            background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); color:#92400e;
+        }
+        .presel-card .pc-carta-status.generada {
+            background:rgba(16,185,129,0.07); border:1px solid rgba(16,185,129,0.2); color:#065f46;
+        }
+
+        /* ── MINI TILES ─────────────────────────────────── */
+        .insight-mini-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin:18px 0 6px; }
+        .mini-tile { background:white; border:1px solid var(--border); border-radius:14px; padding:18px; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:6px; }
+        .mini-label { font-size:.78rem; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase; }
+        .mini-value { font-family:var(--font-display); font-size:1.8rem; font-weight:700; color:var(--navy-700); }
+        .mini-meta  { font-size:.78rem; color:var(--text-soft); }
+        .mini-pill  { align-self:flex-start; font-size:.7rem; font-weight:600; padding:3px 9px; border-radius:999px; }
+        .mini-pill.up   { background:rgba(16,185,129,0.12); color:var(--green);  border:1px solid rgba(16,185,129,0.18); }
+        .mini-pill.down { background:rgba(248,113,113,0.12); color:#dc2626;      border:1px solid rgba(248,113,113,0.18); }
+        .stat-card.stat-link { cursor:pointer; }
+        .admin-filters {
+            display:grid; gap:10px; align-items:center;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            margin-bottom:16px; background:#ffffff;
+            border:1px solid rgba(29,111,232,0.18); border-radius:14px; padding:12px;
+            box-shadow: 0 10px 24px rgba(7,20,40,0.08);
+        }
+        .admin-filters .search-input,
+        .admin-filters .form-control {
+            width:100%;
+            background: #f7f9ff;
+            border:1.5px solid rgba(29,111,232,0.16);
+            border-radius:10px;
+            padding:9px 12px;
+            font-size:.84rem;
+            outline:none;
+            transition:border-color .18s, box-shadow .18s, background .18s;
+            font-family:var(--font-body);
+        }
+        .admin-filters .search-input:focus,
+        .admin-filters .form-control:focus {
+            border-color:var(--accent);
+            background:#ffffff;
+            box-shadow:0 0 0 3px rgba(29,111,232,0.12);
+        }
+        .admin-search {
+            margin: 12px 0 18px;
+            background: #ffffff;
+            border: 1px solid rgba(29,111,232,0.18);
+            border-radius: 12px;
+            padding: 10px 12px;
+            box-shadow: var(--shadow-xs);
+            max-width: 560px;
+        }
+        #secDashboard .stat-card {
+            background: linear-gradient(180deg, #ffffff 0%, #f6f9ff 100%);
+            border-color: rgba(29,111,232,0.18);
+            box-shadow: 0 8px 20px rgba(7,20,40,0.08);
+            position: relative;
+        }
+        #secDashboard .stat-card::before { height: 4px; }
+        #secDashboard .stat-card.amber::before { background: var(--grad-amber); }
+        #secDashboard .stat-card .stat-number { text-shadow: 0 6px 14px rgba(29,111,232,0.12); }
+        #secDashboard .stat-card .stat-label { color: var(--text-soft); }
+        #secDashboard .stat-card.stat-link:hover {
+            transform: translateY(-3px);
+            border-color: rgba(29,111,232,0.32);
+            box-shadow: 0 14px 28px rgba(7,20,40,0.12);
+        }
+
+        /* Center last row of stat cards on wide screens */
+        #secDashboard .stats-grid { grid-template-columns:repeat(6,minmax(160px,1fr)); }
+        #secDashboard .stats-grid > .stat-card:nth-child(7) { grid-column:2; }
+        #secDashboard .stats-grid > .stat-card:nth-child(8) { grid-column:3; }
+        #secDashboard .stats-grid > .stat-card:nth-child(9) { grid-column:4; }
+        #secDashboard .stats-grid > .stat-card:nth-child(10) { grid-column:5; }
+        @media(max-width:1200px){
+            #secDashboard .stats-grid { grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); }
+            #secDashboard .stats-grid > .stat-card:nth-child(7),
+            #secDashboard .stats-grid > .stat-card:nth-child(8),
+            #secDashboard .stats-grid > .stat-card:nth-child(9),
+            #secDashboard .stats-grid > .stat-card:nth-child(10) { grid-column:auto; }
+        }
+
+        /* ── CHARTS ─────────────────────────────────────── */
+        .insights-grid { display:grid; grid-template-columns:repeat(3,minmax(240px,1fr)); gap:18px; margin-top:10px; align-items:stretch; }
+        .insight-card { background:white; border:1px solid var(--border); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow-sm); min-height:200px; display:flex; flex-direction:column; }
+        .insight-card.big { grid-column:span 1; min-height:230px; }
+        @media(max-width:1200px){ .insights-grid { grid-template-columns:repeat(2,minmax(240px,1fr)); } }
+        @media(max-width:760px){ .insights-grid { grid-template-columns:1fr; } }
+        .insight-head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; gap:10px; }
+        .insight-head h4 { margin:0; font-size:0.95rem; }
+        .insight-head p  { margin:2px 0 0; font-size:.78rem; color:var(--text-muted); }
+        .trend-pill { padding:4px 10px; border-radius:999px; font-size:.75rem; font-weight:600; background:rgba(16,185,129,0.12); color:var(--green); }
+        .trend-pill.down { background:rgba(248,113,113,0.12); color:#dc2626; }
+        .chart-holder { flex:1; position:relative; height:160px; max-height:160px; }
+        .insight-card.big .chart-holder { height:200px; max-height:200px; }
+        .chart-holder canvas { width:100% !important; height:100% !important; display:block; }
+
+        /* ── TOP OFERTAS ─────────────────────────────────── */
+        .top-offers-card { margin-top:20px; }
+        .top-offers-card table { width:100%; border-collapse:collapse; }
+        .top-offers-card th, .top-offers-card td { text-align:left; padding:8px 0; font-size:.84rem; }
+        .top-offers-card tbody tr + tr { border-top:1px solid var(--border); }
+
+        /* ── TABLE PAGINATION ─────────────────────────── */
+        .table-pagination {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            margin-top:12px;
+            flex-wrap:wrap;
+            font-size:.78rem;
+            color:var(--text-muted);
+        }
+            .table-pagination .pager-group {
+                display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+            }
+            .table tr.row-click { cursor: pointer; }
+        .table-pagination .pager-btn {
+            padding:6px 10px;
+            border:1px solid var(--border);
+            background:#fff;
+            border-radius:8px;
+            font-size:.76rem;
+            font-weight:600;
+            cursor:pointer;
+            color:var(--navy-700);
+            transition:all .18s;
+        }
+        .table-pagination .pager-btn:hover { border-color:rgba(29,111,232,0.35); }
+        .table-pagination .pager-btn.active {
+            background:var(--accent-dim);
+            color:var(--accent);
+            border-color:rgba(29,111,232,0.35);
+            box-shadow:0 6px 14px rgba(29,111,232,0.15);
+        }
+        .table-pagination .pager-btn:disabled { opacity:.45; cursor:not-allowed; }
+        .table-pagination .pager-ellipsis { padding:0 4px; color:var(--text-muted); }
+        .table-pagination .pager-input {
+            width:70px;
+            padding:6px 8px;
+            border:1px solid var(--border);
+            border-radius:8px;
+            font-size:.76rem;
+            font-family:var(--font-body);
+        }
+        .table-pagination .pager-meta { font-size:.74rem; color:var(--text-soft); }
+        @media(max-width:640px){
+            .table-pagination { flex-direction:column; align-items:flex-start; }
+        }
+
+        /* ── APPROVE BUTTONS ─────────────────────────────── */
+        .approve-btn { padding:6px 12px; border-radius:6px; font-size:.78rem; font-weight:600; cursor:pointer; border:none; }
+        .approve { background:rgba(34,197,94,0.15); color:var(--green); border:1px solid rgba(34,197,94,0.25); }
+        .approve:hover { background:rgba(34,197,94,0.25); }
+        .reject  { background:rgba(239,68,68,0.10); color:var(--red);   border:1px solid rgba(239,68,68,0.20); }
+        .reject:hover  { background:rgba(239,68,68,0.18); }
+        .approve-btn.info { background:rgba(59,134,247,0.12); color:var(--accent); border:1px solid rgba(59,134,247,0.25); }
+        .approve-btn.info:hover { background:rgba(59,134,247,0.2); }
+        .campos-list { list-style:none; padding:0; margin:0; font-size:.78rem; color:var(--text-soft); }
+        .campos-list li + li { margin-top:4px; }
+        .campos-list strong { display:inline-block; min-width:130px; color:var(--navy-700); }
+
+        /* Detail rows */
+        .detail-row td { padding:0 !important; background:rgba(59,134,247,0.05); }
+        .detail-card {
+            margin:12px;
+            background:white;
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            padding:18px 22px;
+            box-shadow:var(--shadow-xs);
+        }
+        .detail-card-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
+        .detail-card-title { font-family:var(--font-display); font-size:1rem; color:var(--navy-700); }
+        .detail-card-subtitle { font-size:.82rem; color:var(--text-muted); }
+        .detail-badges .badge { margin-right:6px; margin-bottom:4px; }
+        .detail-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; font-size:.82rem; color:var(--text-soft); }
+        .detail-grid strong { display:block; font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text); margin-bottom:4px; }
+        .detail-description { margin-top:14px; font-size:.84rem; color:var(--text-soft); line-height:1.5; }
+        .detail-description strong { display:block; font-size:.72rem; letter-spacing:.08em; color:var(--text); margin-bottom:4px; }
+
+        /* Flujo pipeline visual */
+        .flow-steps {
+            display:flex; align-items:center; gap:0;
+            background:white; border:1px solid var(--border);
+            border-radius:var(--radius); overflow:hidden;
+            margin-bottom:24px; box-shadow:var(--shadow-xs);
+        }
+        .flow-step {
+            flex:1; padding:14px 10px; text-align:center;
+            font-size:.72rem; font-weight:700; letter-spacing:.04em;
+            text-transform:uppercase; color:var(--text-muted);
+            border-right:1px solid var(--border);
+            position:relative;
+        }
+        .flow-step:last-child { border-right:none; }
+        .flow-step .fs-icon { font-size:1.2rem; display:block; margin-bottom:4px; }
+        .flow-step.step-empresa { background:rgba(29,111,232,0.04); color:var(--accent); }
+        .flow-step.step-presel  { background:rgba(139,92,246,0.06); color:var(--purple); }
+        .flow-step.step-admin   { background:rgba(245,158,11,0.06); color:#d97706; }
+        .flow-step.step-final   { background:rgba(16,185,129,0.06); color:var(--green); }
+        .flow-arrow { color:var(--text-muted); font-size:.9rem; padding:0 4px; }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="navbar-brand">
+        <div class="navbar-logo">LV</div>
+        <div><div class="navbar-title">Admin — <span>Bolsa LDV</span></div></div>
+    </div>
+    <div class="navbar-links">
+        <span style="color:var(--accent);font-size:.8rem;font-weight:700;letter-spacing:.05em;">● ADMINISTRADOR</span>
+        <button onclick="logout()" class="btn btn-outline btn-sm" style="margin-left:8px;">Cerrar sesión</button>
+    </div>
+</nav>
+
+<div class="dashboard">
+    <div class="sidebar">
+        <div class="sidebar-nav">
+            <button class="nav-item active" onclick="showSection('dashboard')" data-section="secDashboard">
+                <span class="nav-icon">📊</span> Dashboard
+            </button>
+            <button class="nav-item" onclick="showSection('empresas')" data-section="secEmpresas">
+                <span class="nav-icon">🏢</span> Empresas
+                <span class="nav-badge" id="badgePend">0</span>
+            </button>
+            <button class="nav-item" onclick="showSection('estudiantes')" data-section="secEstudiantes">
+                <span class="nav-icon">🎓</span> Estudiantes
+                <span class="nav-badge" id="badgeEstPend" style="background:var(--amber);display:none;">0</span>
+            </button>
+            <button class="nav-item" onclick="showSection('ediciones')" data-section="secEdiciones">
+                <span class="nav-icon">✏️</span> Ediciones
+                <span class="nav-badge" id="badgeEdiciones" style="display:none;">0</span>
+            </button>
+            <button class="nav-item" onclick="showSection('ofertas')" data-section="secOfertas">
+                <span class="nav-icon">📋</span> Ofertas
+            </button>
+            <button class="nav-item" onclick="showSection('postulaciones')" data-section="secPostulaciones">
+                <span class="nav-icon">📨</span> Postulaciones
+            </button>
+            <button class="nav-item" onclick="showSection('preseleccion')" data-section="secPreseleccion">
+                <span class="nav-icon">⏳</span> Preselección
+                <span class="nav-badge" id="badgePresel" style="background:var(--purple);">0</span>
+            </button>
+            <button class="nav-item" onclick="showSection('contratados')" data-section="secContratados">
+                <span class="nav-icon">✅</span> Contratados
+            </button>
+            <button class="nav-item" onclick="showSection('configuracion')" data-section="secConfiguracion">
+                <span class="nav-icon">⚙️</span> Configuración
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <!-- ═══ DASHBOARD ═══ -->
+        <div id="secDashboard" class="section-content">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Panel de Control</div>
+                    <div class="section-subtitle">Resumen general del sistema — Instituto Leonardo Da Vinci</div>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card stat-link" onclick="goToSection('empresas','aprobado')"><div class="stat-number" id="sEmpresas" style="color:var(--accent)">—</div><div class="stat-label">Empresas aprobadas</div></div>
+                <div class="stat-card stat-link" onclick="goToSection('estudiantes','aprobado')"><div class="stat-number" id="sEstudiantes" style="color:#93c5fd">—</div><div class="stat-label">Estudiantes activos</div></div>
+                <div class="stat-card stat-link" onclick="goToSection('ofertas')"><div class="stat-number" id="sOfertas" style="color:#fbbf24">—</div><div class="stat-label">Ofertas activas</div></div>
+                <div class="stat-card stat-link" onclick="goToSection('postulaciones')"><div class="stat-number" id="sPost" style="color:#c4b5fd">—</div><div class="stat-label">Postulaciones</div></div>
+                <div class="stat-card stat-link" onclick="goToSection('preseleccion')"><div class="stat-number" id="sPresel" style="color:var(--purple)">—</div><div class="stat-label">En preselección</div></div>
+                <div class="stat-card stat-link" onclick="goToSection('contratados')"><div class="stat-number" id="sSel" style="color:var(--green)">—</div><div class="stat-label">Contrataciones</div></div>
+                <div class="stat-card amber stat-link" onclick="goToSection('empresas','pendiente')"><div class="stat-number amber" id="sPend">—</div><div class="stat-label">Empresas pendientes</div></div>
+                <div class="stat-card amber stat-link" onclick="goToSection('estudiantes','pendiente')"><div class="stat-number amber" id="sEstPend">—</div><div class="stat-label">Estudiantes pendientes</div></div>
+                <div class="stat-card amber stat-link" onclick="goToSection('ediciones','pendiente')"><div class="stat-number" id="sEdPend" style="color:#d97706;">—</div><div class="stat-label">Ediciones pendientes</div></div>
+                <div class="stat-card stat-link" onclick="goToSection('ediciones','aprobado')"><div class="stat-number" id="sEdDone" style="color:var(--purple);">—</div><div class="stat-label">Ediciones aprobadas</div></div>
+            </div>
+            <div class="insight-mini-grid" id="insightMetrics"></div>
+            <div class="insights-grid">
+                <div class="insight-card big">
+                    <div class="insight-head">
+                        <div><h4>Actividad mensual</h4><p>Postulaciones registradas en los últimos 4 meses</p></div>
+                        <span class="trend-pill" id="trendIndicator">—</span>
+                    </div>
+                    <div class="chart-holder"><canvas id="chartTendencia"></canvas></div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-head"><div><h4>Estado de postulaciones</h4><p>Embudo actual del proceso</p></div></div>
+                    <div class="chart-holder"><canvas id="chartEstados"></canvas></div>
+                    <ul id="legendEstados" style="list-style:none;padding:0;margin:12px 0 0;font-size:.78rem;color:var(--text-muted);"></ul>
+                    <div id="chartEstadosNote" style="font-size:.78rem;color:var(--text-muted);margin-top:6px;"></div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-head"><div><h4>Tipo de oferta</h4><p>Prácticas vs empleos (por postulaciones)</p></div></div>
+                    <div class="chart-holder"><canvas id="chartTipos"></canvas></div>
+                    <div id="chartTiposMeta" style="margin-top:10px;font-size:.8rem;color:var(--text-muted);"></div>
+                </div>
+            </div>
+            <div class="card top-offers-card">
+                <div class="section-header" style="margin-top:0;">
+                    <div><div class="section-title" style="font-size:1rem;">Top ofertas más demandadas</div></div>
+                </div>
+                <table><thead><tr><th>Puesto</th><th>Empresa</th><th>Postulantes</th><th>Preseleccionados</th><th>Contratados</th></tr></thead>
+                <tbody id="topOfertasBody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:16px 0;">Sin datos</td></tr></tbody></table>
+                <div class="table-pagination" id="topOfertasPager"></div>
+            </div>
+        </div>
+
+        <!-- ═══ EMPRESAS ═══ -->
+        <div id="secEmpresas" class="section-content" style="display:none;">
+            <div class="section-header"><div><div class="section-title">Gestión de Empresas</div></div></div>
+            <div style="background:rgba(232,160,32,0.06);border:1px solid rgba(232,160,32,0.2);border-radius:var(--radius);padding:20px;max-width:500px;margin-bottom:20px;">
+                <h4 style="margin-bottom:8px;font-size:.9rem;">🔑 Credenciales de Administrador</h4>
+                <p style="font-size:.84rem;color:var(--text-muted);">Correo: <strong style="color:var(--text);">admin@ldv.edu.pe</strong></p>
+                <p style="font-size:.84rem;color:var(--text-muted);">Contraseña: <strong style="color:var(--text);">Admin2024@LDV</strong></p>
+            </div>
+            <div class="tab-bar">
+                <button class="tab active" data-filter="todas" onclick="filterEmpresas('todas',this)">Todas</button>
+                <button class="tab" data-filter="pendiente" onclick="filterEmpresas('pendiente',this)">Pendientes</button>
+                <button class="tab" data-filter="aprobado" onclick="filterEmpresas('aprobado',this)">Aprobadas</button>
+                <button class="tab" data-filter="rechazado" onclick="filterEmpresas('rechazado',this)">Rechazadas</button>
+            </div>
+            <div class="admin-search">
+                <div class="search-bar">
+                    <input type="text" id="empresasSearch" placeholder="Buscar empresa, RUC o correo..." oninput="filterEmpresasSearch()">
+                    <button>🔍</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="table" id="tablaEmpresas">
+                    <thead><tr><th>Empresa</th><th>RUC</th><th>Sector</th><th>Correo</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody id="empresasBody"></tbody>
+                </table>
+                <div class="table-pagination" id="empresasPager"></div>
+            </div>
+        </div>
+
+        <!-- ═══ ESTUDIANTES ═══ -->
+        <div id="secEstudiantes" class="section-content" style="display:none;">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Gestión de Estudiantes</div>
+                    <div class="section-subtitle">Verifica el código de estudiante LDV antes de aprobar cada cuenta</div>
+                </div>
+            </div>
+            <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);padding:14px 18px;max-width:560px;margin-bottom:18px;font-size:.84rem;color:#92400e;">
+                <strong>⚠️ Proceso de verificación:</strong> Confirma en el sistema institucional que el código de estudiante coincide con el nombre y carrera antes de aprobar.
+            </div>
+            <div class="tab-bar">
+                <button class="tab active" data-filter="todos" onclick="filterEstudiantes('todos',this)">Todos</button>
+                <button class="tab" data-filter="pendiente" onclick="filterEstudiantes('pendiente',this)">Pendientes <span id="tabEstPend" style="background:var(--amber);color:#fff;border-radius:99px;padding:1px 7px;font-size:.7rem;margin-left:4px;">0</span></button>
+                <button class="tab" data-filter="aprobado" onclick="filterEstudiantes('aprobado',this)">Aprobados</button>
+                <button class="tab" data-filter="rechazado" onclick="filterEstudiantes('rechazado',this)">Rechazados</button>
+            </div>
+            <div class="admin-search">
+                <div class="search-bar">
+                    <input type="text" id="estudiantesSearch" placeholder="Buscar estudiante, DNI o código..." oninput="filterEstudiantesSearch()">
+                    <button>🔍</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="table" id="tablaEstudiantes">
+                    <thead><tr><th>Nombre</th><th>DNI</th><th>Cód. Estudiante</th><th>Carrera</th><th>Perfil</th><th>Correo</th><th>Estado</th><th>Registro</th><th>Acciones</th></tr></thead>
+                    <tbody id="estudiantesBody"></tbody>
+                </table>
+                <div class="table-pagination" id="estudiantesPager"></div>
+            </div>
+        </div>
+
+        <!-- ═══ EDICIONES ═══ -->
+        <div id="secEdiciones" class="section-content" style="display:none;">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Solicitudes de Edición</div>
+                    <div class="section-subtitle">Cambios solicitados por empresas y estudiantes. El administrador debe aprobarlos antes de aplicarlos.</div>
+                </div>
+            </div>
+            <div class="tab-bar" id="edicionesTabs">
+                <button class="tab active" data-filter="todos" onclick="filterEdiciones('todos', this)">Todas</button>
+                <button class="tab" data-filter="pendiente" onclick="filterEdiciones('pendiente', this)">Pendientes</button>
+                <button class="tab" data-filter="aprobado" onclick="filterEdiciones('aprobado', this)">Aprobadas</button>
+                <button class="tab" data-filter="rechazado" onclick="filterEdiciones('rechazado', this)">Rechazadas</button>
+            </div>
+            <div class="admin-search">
+                <div class="search-bar">
+                    <input type="text" id="edicionesSearch" placeholder="Buscar solicitante, correo o campo..." oninput="filterEdicionesSearch()">
+                    <button>🔍</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Solicitante</th>
+                            <th>Tipo</th>
+                            <th>Campos solicitados</th>
+                            <th>Fechas</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="edicionesBody"></tbody>
+                </table>
+                <div class="table-pagination" id="edicionesPager"></div>
+            </div>
+        </div>
+
+        <!-- ═══ OFERTAS ═══ -->
+        <div id="secOfertas" class="section-content" style="display:none;">
+            <div class="section-header"><div><div class="section-title">Todas las Ofertas</div></div></div>
+            <div class="admin-filters">
+                <input type="text" class="search-input" id="ofertaSearch" placeholder="Buscar por título o empresa..." oninput="filterOfertasAdmin()">
+                <select class="form-control" id="ofertaTipoFilter" onchange="filterOfertasAdmin()">
+                    <option value="">Todos los tipos</option>
+                    <option value="practicas">🎓 Prácticas</option>
+                    <option value="trabajo">💼 Trabajo</option>
+                    <option value="otros">✨ Otros</option>
+                </select>
+                <select class="form-control" id="ofertaDirigidoFilter" onchange="filterOfertasAdmin()">
+                    <option value="">Todos los perfiles</option>
+                    <option value="practicante">🔧 Practicante</option>
+                    <option value="egresado">🎓 Egresado</option>
+                    <option value="titulado">🏆 Titulado</option>
+                    <option value="todos">👥 Todos</option>
+                </select>
+                <select class="form-control" id="ofertaEstadoFilter" onchange="filterOfertasAdmin()">
+                    <option value="">Todos los estados</option>
+                    <option value="activa">✅ Activa</option>
+                    <option value="pausada">⏸ Pausada</option>
+                    <option value="cerrada">🔒 Cerrada</option>
+                </select>
+            </div>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead><tr><th>Título</th><th>Empresa</th><th>Tipo</th><th>Dirigido a</th><th>Estado</th><th>Postulantes</th><th>Presel.</th><th>Contratados</th><th>Publicado</th></tr></thead>
+                    <tbody id="ofertasBody"></tbody>
+                </table>
+                <div class="table-pagination" id="ofertasPager"></div>
+            </div>
+        </div>
+
+        <!-- ═══ POSTULACIONES ═══ -->
+        <div id="secPostulaciones" class="section-content" style="display:none;">
+            <div class="section-header"><div><div class="section-title">Todas las Postulaciones</div></div></div>
+            <div class="admin-filters">
+                <input type="text" class="search-input" id="postulacionSearch" placeholder="Buscar por estudiante, oferta o empresa..." oninput="filterPostulacionesAdmin()">
+                <select class="form-control" id="postulacionEstadoFilter" onchange="filterPostulacionesAdmin()">
+                    <option value="">Todos los estados</option>
+                    <option value="enviada">📨 Enviada</option>
+                    <option value="en_revision">🔍 En revisión</option>
+                    <option value="preseleccionado">⏳ Preseleccionado</option>
+                    <option value="rechazado">❌ Rechazado</option>
+                    <option value="cerrado">🔒 Cerrado/Contratado</option>
+                </select>
+            </div>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead><tr><th>Estudiante</th><th>Carrera</th><th>Oferta</th><th>Empresa</th><th>Estado</th><th>CV</th><th>Fecha</th></tr></thead>
+                    <tbody id="postulacionesBody"></tbody>
+                </table>
+                <div class="table-pagination" id="postulacionesPager"></div>
+            </div>
+        </div>
+
+        <!-- ═══ PRESELECCIÓN ═══ -->
+        <div id="secPreseleccion" class="section-content" style="display:none;">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">⏳ Preselección de Candidatos</div>
+                    <div class="section-subtitle">Candidatos elegidos por las empresas · Genera los 6 documentos PDF y confirma la contratación</div>
+                </div>
+            </div>
+            <div class="flow-steps">
+                <div class="flow-step step-empresa"><span class="fs-icon">🏢</span>Empresa revisa<br>y pre-selecciona</div>
+                <div class="flow-step step-presel"><span class="fs-icon">⭐</span>Aparece aquí<br>en preselección</div>
+                <div class="flow-step step-admin"><span class="fs-icon">📄</span>Admin genera<br>6 documentos PDF</div>
+                <div class="flow-step step-admin"><span class="fs-icon">🔒</span>Admin cierra<br>la postulación</div>
+                <div class="flow-step step-final"><span class="fs-icon">✅</span>Candidato<br>contratado</div>
+            </div>
+            <div class="admin-filters">
+                <input type="text" class="search-input" id="preseleccionSearch" placeholder="Buscar alumno, DNI o puesto..." oninput="filterPreseleccionAdmin()">
+            </div>
+            <div id="preseleccionList"></div>
+        </div>
+
+        <!-- ═══ CONTRATADOS ═══ -->
+        <div id="secContratados" class="section-content" style="display:none;">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">✅ Contratados</div>
+                    <div class="section-subtitle">Procesos completados — Documentos emitidos y vacante cerrada</div>
+                </div>
+            </div>
+            <div class="admin-filters">
+                <input type="text" class="search-input" id="contratadosSearch" placeholder="Buscar alumno, DNI o puesto..." oninput="filterContratadosAdmin()">
+            </div>
+            <div id="contratadosList"></div>
+        </div>
+
+        <!-- ═══ CONFIGURACIÓN ═══ -->
+        <div id="secConfiguracion" class="section-content" style="display:none;">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">⚙️ Configuración del Sistema</div>
+                    <div class="section-subtitle">Datos del responsable de la Bolsa de Trabajo y parámetros de los documentos PDF</div>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;max-width:1200px;width:100%;margin-bottom:24px;">
+
+                <!-- Card Responsable -->
+                <div style="background:white;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);">
+                    <div style="display:flex;align-items:center;gap:14px;padding:18px 22px;background:linear-gradient(135deg,rgba(29,111,232,0.07),rgba(29,111,232,0.02));border-bottom:1px solid rgba(29,111,232,0.14);">
+                        <span style="font-size:1.7rem;">👤</span>
+                        <div>
+                            <div style="font-family:var(--font-display);font-size:.93rem;font-weight:700;color:var(--navy-700);">Responsable de la Bolsa de Trabajo</div>
+                            <div style="font-size:.74rem;color:var(--text-muted);margin-top:2px;">Firma los documentos oficiales emitidos por la unidad</div>
+                        </div>
+                    </div>
+                    <div style="padding:20px 22px;display:grid;gap:16px;">
+                        <div>
+                            <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);margin-bottom:7px;">✏️ Nombre completo</label>
+                            <input type="text" id="cfg_responsable_nombre" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:.88rem;font-family:inherit;color:var(--navy-700);background:#f8faff;outline:none;box-sizing:border-box;transition:border-color .18s,box-shadow .18s;" placeholder="Ej: GARCÍA SÁNCHEZ ROSA ELENA"
+                                onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(29,111,232,0.1)';this.style.background='white'"
+                                onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none';this.style.background='#f8faff'">
+                            <div style="font-size:.71rem;color:var(--text-muted);margin-top:5px;">📄 Aparece en: Carta de Presentación, Certificado de Prácticas e Informe</div>
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);margin-bottom:7px;">🏷️ Cargo</label>
+                            <input type="text" id="cfg_responsable_cargo" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:.88rem;font-family:inherit;color:var(--navy-700);background:#f8faff;outline:none;box-sizing:border-box;transition:border-color .18s,box-shadow .18s;" placeholder="Jefa de la Unidad de Bolsa de Trabajo"
+                                onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(29,111,232,0.1)';this.style.background='white'"
+                                onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none';this.style.background='#f8faff'">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);margin-bottom:7px;">📧 Correo institucional</label>
+                            <input type="email" id="cfg_responsable_correo" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:.88rem;font-family:inherit;color:var(--navy-700);background:#f8faff;outline:none;box-sizing:border-box;transition:border-color .18s,box-shadow .18s;" placeholder="bolsatrabajo@ldv.edu.pe"
+                                onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(29,111,232,0.1)';this.style.background='white'"
+                                onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none';this.style.background='#f8faff'">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Docente Supervisor -->
+                <div style="background:white;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);">
+                    <div style="display:flex;align-items:center;gap:14px;padding:18px 22px;background:linear-gradient(135deg,rgba(139,92,246,0.07),rgba(139,92,246,0.02));border-bottom:1px solid rgba(139,92,246,0.14);">
+                        <span style="font-size:1.7rem;">🎓</span>
+                        <div>
+                            <div style="font-family:var(--font-display);font-size:.93rem;font-weight:700;color:var(--navy-700);">Docente Supervisor de Prácticas</div>
+                            <div style="font-size:.74rem;color:var(--text-muted);margin-top:2px;">Firma la ficha de supervisión e informe de prácticas</div>
+                        </div>
+                    </div>
+                    <div style="padding:20px 22px;display:grid;gap:16px;">
+                        <div>
+                            <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);margin-bottom:7px;">✏️ Nombre completo</label>
+                            <input type="text" id="cfg_docente_nombre" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:.88rem;font-family:inherit;color:var(--navy-700);background:#f8faff;outline:none;box-sizing:border-box;transition:border-color .18s,box-shadow .18s;" placeholder="Ej: ALCÁNTARA OCAS ERICK RUBÉN"
+                                onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(29,111,232,0.1)';this.style.background='white'"
+                                onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none';this.style.background='#f8faff'">
+                            <div style="font-size:.71rem;color:var(--text-muted);margin-top:5px;">📄 Aparece en: Ficha de Supervisión e Informe de Prácticas</div>
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);margin-bottom:7px;">🏷️ Cargo</label>
+                            <input type="text" id="cfg_docente_cargo" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:.88rem;font-family:inherit;color:var(--navy-700);background:#f8faff;outline:none;box-sizing:border-box;transition:border-color .18s,box-shadow .18s;" placeholder="Docente Supervisor"
+                                onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(29,111,232,0.1)';this.style.background='white'"
+                                onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none';this.style.background='#f8faff'">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Centro de Formación -->
+                <div style="grid-column:1/-1;background:white;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);">
+                    <div style="display:flex;align-items:center;gap:14px;padding:18px 22px;background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.02));border-bottom:1px solid rgba(16,185,129,0.18);">
+                        <span style="font-size:1.7rem;">🏫</span>
+                        <div>
+                            <div style="font-family:var(--font-display);font-size:.93rem;font-weight:700;color:var(--navy-700);">Centro de Formación (IESTP)</div>
+                            <div style="font-size:.74rem;color:var(--text-muted);margin-top:2px;">Se usa en el Convenio de EFSRT y documentos oficiales</div>
+                        </div>
+                    </div>
+                    <div style="padding:20px 22px;display:grid;gap:16px;">
+                        <div>
+                            <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);margin-bottom:7px;">Razón social *</label>
+                            <input type="text" id="cfg_instituto_razon" class="form-control" placeholder="IESTP LEONARDO DA VINCI" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:.88rem;font-family:inherit;color:var(--navy-700);background:#f8faff;">
+                        </div>
+                        <div class="form-row" style="display:grid;grid-template-columns:minmax(180px,0.65fr) minmax(260px,1.35fr);gap:14px;">
+                            <div>
+                                <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);margin-bottom:7px;">RUC</label>
+                                <input type="text" id="cfg_instituto_ruc" class="form-control" placeholder="20440386092" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:.88rem;font-family:inherit;color:var(--navy-700);background:#f8faff;">
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);margin-bottom:7px;">Dirección</label>
+                                <input type="text" id="cfg_instituto_direccion" class="form-control" placeholder="Av. España 2725, Trujillo" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:.88rem;font-family:inherit;color:var(--navy-700);background:#f8faff;">
+                            </div>
+                        </div>
+                        <div class="form-row" style="display:grid;grid-template-columns:minmax(220px,0.7fr) minmax(160px,0.3fr);gap:14px;">
+                            <div>
+                                <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);margin-bottom:7px;">Representante *</label>
+                                <input type="text" id="cfg_instituto_rep_nombre" class="form-control" placeholder="Lic. GLADYS ANGELICA MIYASHIMA" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:.88rem;font-family:inherit;color:var(--navy-700);background:#f8faff;">
+                                <div style="font-size:.71rem;color:var(--text-muted);margin-top:5px;">Director(a) o responsable que firma el Convenio</div>
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);margin-bottom:7px;">Documento de identidad *</label>
+                                <input type="text" id="cfg_instituto_rep_dni" class="form-control" placeholder="DNI 10066097" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:.88rem;font-family:inherit;color:var(--navy-700);background:#f8faff;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Carreras (ocupa full width) -->
+                <div style="grid-column:1/-1;background:white;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);">
+                    <div style="display:flex;align-items:center;gap:14px;padding:18px 22px;background:linear-gradient(135deg,rgba(16,185,129,0.07),rgba(16,185,129,0.02));border-bottom:1px solid rgba(16,185,129,0.14);">
+                        <span style="font-size:1.7rem;">🏫</span>
+                        <div>
+                            <div style="font-family:var(--font-display);font-size:.93rem;font-weight:700;color:var(--navy-700);">Carreras Técnicas del Instituto LDV</div>
+                            <div style="font-size:.74rem;color:var(--text-muted);margin-top:2px;">Programas disponibles en la Bolsa de Trabajo</div>
+                        </div>
+                    </div>
+                    <div style="padding:20px 22px;">
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;">
+                            <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#f8faff;border:1.5px solid var(--border);border-radius:12px;">
+                                <span style="font-size:1.6rem;">💼</span>
+                                <div><strong style="display:block;font-size:.85rem;color:var(--navy-700);">Administración de Empresas</strong><span style="font-size:.73rem;color:var(--text-muted);">Gestión y negocios</span></div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#f8faff;border:1.5px solid var(--border);border-radius:12px;">
+                                <span style="font-size:1.6rem;">📊</span>
+                                <div><strong style="display:block;font-size:.85rem;color:var(--navy-700);">Contabilidad</strong><span style="font-size:.73rem;color:var(--text-muted);">Finanzas y tributos</span></div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#f8faff;border:1.5px solid var(--border);border-radius:12px;">
+                                <span style="font-size:1.6rem;">💻</span>
+                                <div><strong style="display:block;font-size:.85rem;color:var(--navy-700);">Computación e Informática</strong><span style="font-size:.73rem;color:var(--text-muted);">Tecnología y sistemas</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Documentos PDF (ocupa full width) -->
+                <div style="grid-column:1/-1;background:white;border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);">
+                    <div style="display:flex;align-items:center;gap:14px;padding:18px 22px;background:linear-gradient(135deg,rgba(245,158,11,0.07),rgba(245,158,11,0.02));border-bottom:1px solid rgba(245,158,11,0.14);">
+                        <span style="font-size:1.7rem;">📄</span>
+                        <div>
+                            <div style="font-family:var(--font-display);font-size:.93rem;font-weight:700;color:var(--navy-700);">Documentos PDF por Preselección</div>
+                            <div style="font-size:.74rem;color:var(--text-muted);margin-top:2px;">Se generan automáticamente al confirmar un candidato preseleccionado</div>
+                        </div>
+                    </div>
+                    <div style="padding:20px 22px;">
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;">
+                            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f8faff;border:1px solid var(--border);border-radius:10px;font-size:.82rem;color:var(--navy-700);"><span style="width:22px;height:22px;border-radius:50%;background:rgba(245,158,11,0.15);color:#92400e;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</span><span>📜 <strong>Carta de Aceptación de EFSRT</strong> — Anexo 2</span></div>
+                            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f8faff;border:1px solid var(--border);border-radius:10px;font-size:.82rem;color:var(--navy-700);"><span style="width:22px;height:22px;border-radius:50%;background:rgba(245,158,11,0.15);color:#92400e;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</span><span>📋 <strong>Constancia de EFSRT</strong> — Anexo 4</span></div>
+                            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f8faff;border:1px solid var(--border);border-radius:10px;font-size:.82rem;color:var(--navy-700);"><span style="width:22px;height:22px;border-radius:50%;background:rgba(245,158,11,0.15);color:#92400e;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</span><span>📝 <strong>Ficha de Supervisión</strong> — Anexo 6</span></div>
+                            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f8faff;border:1px solid var(--border);border-radius:10px;font-size:.82rem;color:var(--navy-700);"><span style="width:22px;height:22px;border-radius:50%;background:rgba(245,158,11,0.15);color:#92400e;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">4</span><span>🏫 <strong>Carta de Presentación</strong> — Presentación oficial LDV a la empresa</span></div>
+                            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f8faff;border:1px solid var(--border);border-radius:10px;font-size:.82rem;color:var(--navy-700);"><span style="width:22px;height:22px;border-radius:50%;background:rgba(245,158,11,0.15);color:#92400e;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">5</span><span>📋 <strong>Convenio EFSRT</strong> — Anexo 3</span></div>
+                            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f8faff;border:1px solid var(--border);border-radius:10px;font-size:.82rem;color:var(--navy-700);"><span style="width:22px;height:22px;border-radius:50%;background:rgba(245,158,11,0.15);color:#92400e;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">6</span><span>📝 <strong>Ficha de Evaluación</strong> — Anexo 5</span></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /grid -->
+
+            <button class="btn btn-primary" style="padding:11px 28px;font-size:.92rem;border-radius:12px;box-shadow:0 4px 14px rgba(29,111,232,0.22);" onclick="guardarConfiguracion()">
+                💾 Guardar configuración
+            </button>
+        </div>
+
+    </div><!-- /.main-content -->
+</div><!-- /.dashboard -->
+
+<div class="modal-overlay" id="modalOfertaAdmin">
+    <div class="modal" style="max-width:640px;">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalOfertaTitle">Detalle de la oferta</h3>
+            <button class="modal-close" onclick="closeAdminOfertaDetail()">×</button>
+        </div>
+        <div id="modalOfertaBody"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/global.js"></script>
+<script>
+if (!Auth.requireAuth('admin')) {}
+
+let empresasData = [];
+let dashboardCharts = { tendencia: null, estados: null, tipos: null };
+let edicionesData = [];
+let filtroEdiciones = 'todos';
+let pendingAdminFilter = null;
+let ofertasData = [];
+let postulacionesData = [];
+let preseleccionData = [];
+let contratadosData = [];
+let filtroEmpresas = 'todas';
+let filtroEstudiantes = 'todos';
+let empresasSearchQuery = '';
+let estudiantesSearchQuery = '';
+let edicionesSearchQuery = '';
+let topOfertasData = [];
+let openEmpresaDetails = new Set();
+let openEstudianteDetails = new Set();
+
+const PAGE_SIZE = 10;
+const TABLE_PAGES = {
+    topOfertas: 1,
+    empresas: 1,
+    estudiantes: 1,
+    ediciones: 1,
+    ofertas: 1,
+    postulaciones: 1
+};
+
+const PAGER_TARGETS = {
+    topOfertas: 'topOfertasPager',
+    empresas: 'empresasPager',
+    estudiantes: 'estudiantesPager',
+    ediciones: 'edicionesPager',
+    ofertas: 'ofertasPager',
+    postulaciones: 'postulacionesPager'
+};
+
+const SECTION_LOADERS = {
+    dashboard:     loadStats,
+    empresas:      loadEmpresas,
+    estudiantes:   loadEstudiantes,
+    ediciones:     loadEdiciones,
+    ofertas:       loadOfertas,
+    postulaciones: loadPostulaciones,
+    preseleccion:  loadPreseleccion,
+    contratados:   loadContratados,
+    configuracion: loadConfiguracion
+};
+
+const AUTO_REFRESHABLE_SECTIONS = new Set(['dashboard','empresas','estudiantes','ediciones','ofertas','postulaciones','preseleccion','contratados']);
+const AUTO_REFRESH_MS = 15000;
+let currentSection = 'dashboard';
+let autoRefreshTimer = null;
+
+function refreshCurrentSection() {
+    if (document.hidden) return;
+    if (!AUTO_REFRESHABLE_SECTIONS.has(currentSection)) return;
+    SECTION_LOADERS[currentSection]?.();
+// ...existing code...
+}
+
+function scheduleAutoRefresh() {
+    clearInterval(autoRefreshTimer);
+    if (!AUTO_REFRESHABLE_SECTIONS.has(currentSection)) return;
+    autoRefreshTimer = setInterval(refreshCurrentSection, AUTO_REFRESH_MS);
+}
+
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshCurrentSection();
+});
+
+function showSection(id) {
+    document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const key = id[0].toUpperCase() + id.slice(1);
+    const sec = document.getElementById('sec' + key);
+    if (sec) sec.style.display = 'block';
+    // Activar nav item por data-section
+    const btn = document.querySelector(`[data-section="sec${key}"]`) || document.querySelector(`[onclick="showSection('${id}')"]`);
+    if (btn) btn.classList.add('active');
+    currentSection = id;
+    SECTION_LOADERS[id]?.();
+    scheduleAutoRefresh();
+}
+
+function goToSection(section, filter) {
+    pendingAdminFilter = filter ? { section, filter } : null;
+    showSection(section);
+}
+
+function applyPendingFilterFor(section) {
+    if (!pendingAdminFilter || pendingAdminFilter.section !== section) return;
+    const filter = pendingAdminFilter.filter;
+    if (section === 'empresas') filterEmpresas(filter);
+    if (section === 'estudiantes') filterEstudiantes(filter);
+    if (section === 'ediciones') filterEdiciones(filter);
+    pendingAdminFilter = null;
+}
+
+function clampPage(page, totalPages) {
+    return Math.min(Math.max(1, page), totalPages);
+}
+
+function paginateData(data, key) {
+    const totalItems = data.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+    const page = clampPage(TABLE_PAGES[key] || 1, totalPages);
+    TABLE_PAGES[key] = page;
+    const start = (page - 1) * PAGE_SIZE;
+    return { items: data.slice(start, start + PAGE_SIZE), page, totalPages, totalItems };
+}
+
+function getPagerPages(current, total) {
+    const pages = [];
+    for (let p = 1; p <= total; p += 1) {
+        if (p === 1 || p === total || Math.abs(p - current) <= 1) pages.push(p);
+    }
+    return pages;
+}
+
+function renderPagination(key, totalItems, page, totalPages) {
+    const container = document.getElementById(PAGER_TARGETS[key]);
+    if (!container) return;
+    if (totalItems <= PAGE_SIZE) {
+        container.innerHTML = '';
+        return;
+    }
+    const pages = getPagerPages(page, totalPages);
+    let html = '<div class="pager-group">';
+    html += `<button class="pager-btn" ${page <= 1 ? 'disabled' : ''} onclick="setTablePage('${key}', ${page - 1})">Anterior</button>`;
+    let last = 0;
+    pages.forEach(p => {
+        if (p - last > 1) html += '<span class="pager-ellipsis">...</span>';
+        html += `<button class="pager-btn ${p === page ? 'active' : ''}" onclick="setTablePage('${key}', ${p})">${p}</button>`;
+        last = p;
+    });
+    html += `<button class="pager-btn" ${page >= totalPages ? 'disabled' : ''} onclick="setTablePage('${key}', ${page + 1})">Siguiente</button>`;
+    html += '</div>';
+    html += `<div class="pager-group">
+        <span class="pager-meta">Pagina ${page} de ${totalPages}</span>
+        <input class="pager-input" type="number" min="1" max="${totalPages}" id="pagerJump-${key}" value="${page}">
+        <button class="pager-btn" onclick="jumpToPage('${key}')">Ir</button>
+    </div>`;
+    container.innerHTML = html;
+}
+
+function jumpToPage(key) {
+    const input = document.getElementById(`pagerJump-${key}`);
+    if (!input) return;
+    const value = parseInt(input.value, 10);
+    if (Number.isNaN(value)) return;
+    setTablePage(key, value);
+}
+
+function setTablePage(key, page) {
+    TABLE_PAGES[key] = page;
+    switch (key) {
+        case 'topOfertas':
+            renderTopOfertas();
+            break;
+        case 'empresas':
+            applyEmpresasFilter();
+            break;
+        case 'estudiantes':
+            applyEstudiantesFilter();
+            break;
+        case 'ediciones':
+            applyEdicionesFilter();
+            break;
+        case 'ofertas':
+            filterOfertasAdmin(false);
+            break;
+        case 'postulaciones':
+            filterPostulacionesAdmin(false);
+            break;
+        default:
+            break;
+    }
+}
+
+// ═══ STATS ═══
+async function loadStats() {
+    try {
+        const [stats, postulaciones, ofertas, edicionesPend, edicionesAprob] = await Promise.all([
+            apiFetch('/admin/stats'),
+            apiFetch('/admin/postulaciones'),
+            apiFetch('/admin/ofertas'),
+            apiFetch('/admin/ediciones?estado=pendiente'),
+            apiFetch('/admin/ediciones?estado=aprobado')
+        ]);
+        document.getElementById('sEmpresas').textContent   = stats.empresas || 0;
+        document.getElementById('sEstudiantes').textContent = stats.estudiantes || 0;
+        document.getElementById('sOfertas').textContent    = stats.ofertas || 0;
+        document.getElementById('sPost').textContent       = stats.postulaciones || 0;
+        document.getElementById('sPresel').textContent     = stats.preseleccionados || 0;
+        document.getElementById('sSel').textContent        = stats.seleccionados || 0;
+
+        const empresasPendientes = stats.empresas_pendientes || 0;
+        const badgeEmpresas = document.getElementById('badgePend');
+        if (badgeEmpresas) {
+            badgeEmpresas.textContent = empresasPendientes;
+            badgeEmpresas.style.display = empresasPendientes > 0 ? '' : 'none';
+        }
+
+        const preseleccionados = stats.preseleccionados || 0;
+        const badgePreseleccion = document.getElementById('badgePresel');
+        if (badgePreseleccion) {
+            badgePreseleccion.textContent = preseleccionados;
+            badgePreseleccion.style.display = preseleccionados > 0 ? '' : 'none';
+        }
+
+        // Badge de estudiantes pendientes
+        const estPend = stats.estudiantes_pendientes || 0;
+        const badgeEstPend = document.getElementById('badgeEstPend');
+        const tabEstPend   = document.getElementById('tabEstPend');
+        if (badgeEstPend) { badgeEstPend.textContent = estPend; badgeEstPend.style.display = estPend > 0 ? '' : 'none'; }
+        if (tabEstPend)   { tabEstPend.textContent = estPend; tabEstPend.style.display = estPend > 0 ? '' : 'none'; }
+
+        // Stats de pendientes en dashboard
+        const sPend = document.getElementById('sPend');
+        const sEstPend = document.getElementById('sEstPend');
+        if (sPend) sPend.textContent = empresasPendientes;
+        if (sEstPend) sEstPend.textContent = estPend;
+
+        const badgeEd = document.getElementById('badgeEdiciones');
+        const pendingCount = Array.isArray(edicionesPend) ? edicionesPend.length : 0;
+        const approvedCount = Array.isArray(edicionesAprob) ? edicionesAprob.length : 0;
+        if (badgeEd) {
+            badgeEd.textContent = pendingCount;
+            badgeEd.style.display = pendingCount > 0 ? '' : 'none';
+        }
+
+        const sEdPend = document.getElementById('sEdPend');
+        const sEdDone = document.getElementById('sEdDone');
+        if (sEdPend) sEdPend.textContent = pendingCount;
+        if (sEdDone) sEdDone.textContent = approvedCount;
+
+        renderInsightMetrics(postulaciones, stats);
+        renderTendenciaChart(buildMonthlySeries(postulaciones, 4));
+        renderEstadosChart(buildEstadoDistribution(postulaciones));
+        renderTipoChart(buildTipoDistribution(ofertas));
+        renderTopOfertas(ofertas);
+    } catch (e) { console.error(e); }
+}
+
+function renderInsightMetrics(postulaciones, stats) {
+    const container = document.getElementById('insightMetrics');
+    if (!container) return;
+    const now = new Date();
+    const s30 = new Date(now); s30.setDate(s30.getDate() - 30);
+    const s60 = new Date(now); s60.setDate(s60.getDate() - 60);
+    const last30 = postulaciones.filter(p => { const d = new Date(p.fecha_postulacion); return !isNaN(d) && d >= s30 && d <= now; }).length;
+    const prev30 = postulaciones.filter(p => { const d = new Date(p.fecha_postulacion); return !isNaN(d) && d >= s60 && d < s30; }).length;
+    let trend = prev30 === 0 ? (last30 > 0 ? 100 : 0) : Math.round(((last30 - prev30) / prev30) * 100);
+    const tasa = stats.postulaciones ? Math.round((stats.seleccionados / stats.postulaciones) * 100) : 0;
+    const prom = stats.ofertas ? (stats.postulaciones / stats.ofertas).toFixed(1) : '0';
+    const metrics = [
+        { label:'Postulaciones (30 días)', value:last30,  pill:`${trend>=0?'+':''}${trend}% vs anterior`, pillClass:trend>=0?'up':'down', desc:'Actividad reciente de candidatos' },
+        { label:'En preselección',         value:stats.preseleccionados||0, pill:null, desc:'Esperando carta del admin' },
+        { label:'Contrataciones cerradas', value:stats.seleccionados||0,    pill:null, desc:'Procesos finalizados exitosamente' },
+        { label:'Tasa de contratación',    value:`${tasa}%`,                pill:null, desc:`${stats.seleccionados} contratados de ${stats.postulaciones} postulaciones` },
+        { label:'Promedio postulantes',    value:prom,                      pill:null, desc:`por oferta activa` },
+    ];
+    container.innerHTML = metrics.map(m => `
+        <div class="mini-tile">
+            <div class="mini-label">${m.label}</div>
+            <div class="mini-value">${m.value}</div>
+            ${m.pill ? `<span class="mini-pill ${m.pillClass}">${m.pill}</span>` : ''}
+            <div class="mini-meta">${m.desc}</div>
+        </div>`).join('');
+}
+
+function buildMonthlySeries(postulaciones, months = 4) {
+    const map = new Map();
+    postulaciones.forEach(p => {
+        const d = new Date(p.fecha_postulacion);
+        if (isNaN(d)) return;
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        map.set(key, (map.get(key) || 0) + 1);
+    });
+    const labels = [], values = [];
+    for (let i = months - 1; i >= 0; i--) {
+        const d = new Date(); d.setMonth(d.getMonth() - i);
+        labels.push(d.toLocaleString('es-PE', { month:'short' }));
+        values.push(map.get(`${d.getFullYear()}-${d.getMonth()}`) || 0);
+    }
+    return { labels, values };
+}
+
+function renderTendenciaChart(series) {
+    const ctx = document.getElementById('chartTendencia');
+    if (!ctx) return;
+    if (!dashboardCharts.tendencia) {
+        dashboardCharts.tendencia = new Chart(ctx, {
+            type:'line',
+            data: { labels:series.labels, datasets:[{ label:'Postulaciones', data:series.values, borderColor:'#1d6fe8', backgroundColor:'rgba(29,111,232,0.15)', tension:0.35, fill:true, pointRadius:4, pointBackgroundColor:'#1d6fe8' }] },
+            options: { maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{precision:0} }, x:{ grid:{display:false} } } }
+        });
+    } else {
+        dashboardCharts.tendencia.data.labels = series.labels;
+        dashboardCharts.tendencia.data.datasets[0].data = series.values;
+        dashboardCharts.tendencia.update();
+    }
+    const el = document.getElementById('trendIndicator');
+    if (el) {
+        const last = series.values.at(-1) || 0;
+        const prev = series.values.length > 1 ? series.values.at(-2) : 0;
+        const d = prev === 0 ? (last > 0 ? 100 : 0) : Math.round(((last - prev) / prev) * 100);
+        el.textContent = `${d >= 0 ? '+' : ''}${d}% vs mes anterior`;
+        el.classList.toggle('down', d < 0);
+    }
+}
+
+function buildEstadoDistribution(postulaciones) {
+    const buckets = { 'Enviadas':0, 'En revisión':0, 'Preseleccionados':0, 'Contratados':0, 'Rechazados':0 };
+    postulaciones.forEach(p => {
+        const e = p.estado_postulacion;
+        const cerrada = Boolean(p.postulacion_cerrada);
+        if (e === 'enviada') {
+            buckets['Enviadas']++;
+        } else if (e === 'en_revision') {
+            buckets['En revisión']++;
+        } else if (e === 'seleccionado') {
+            if (cerrada) buckets['Contratados']++;
+            else buckets['Preseleccionados']++;
+        } else if (e === 'rechazado') {
+            buckets['Rechazados']++;
+        }
+    });
+    const labels = Object.keys(buckets), values = Object.values(buckets);
+    const colors = ['#60a5fa','#fbbf24','#a78bfa','#22c55e','#f87171'];
+    return { labels, values, colors };
+}
+
+function renderEstadosChart(data) {
+    const ctx = document.getElementById('chartEstados');
+    if (!ctx) return;
+    if (!dashboardCharts.estados) {
+        dashboardCharts.estados = new Chart(ctx, {
+            type:'doughnut',
+            data:{ labels:data.labels, datasets:[{ data:data.values, backgroundColor:data.colors }] },
+            options:{ maintainAspectRatio:false, plugins:{ legend:{ display:false } }, cutout:'60%' }
+        });
+    } else {
+        dashboardCharts.estados.data.labels = data.labels;
+        dashboardCharts.estados.data.datasets[0].data = data.values;
+        dashboardCharts.estados.update();
+    }
+    const total = data.values.reduce((a,b) => a+b, 0) || 1;
+    const legend = document.getElementById('legendEstados');
+    if (legend) {
+        legend.innerHTML = data.labels.map((label, i) => {
+            const pct = Math.round((data.values[i] / total) * 100);
+            return `<li style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                <span style="width:10px;height:10px;border-radius:3px;background:${data.colors[i]};display:inline-block;"></span>
+                <span style="flex:1;">${label}</span>
+                <strong style="color:var(--text);">${data.values[i]}</strong>
+                <span style="color:var(--text-muted);">${pct}%</span>
+            </li>`;
+        }).join('');
+    }
+    const note = document.getElementById('chartEstadosNote');
+    const presel = data.values[2] || 0, contrat = data.values[3] || 0;
+    if (note) note.innerHTML = presel || contrat
+        ? `<strong>${presel}</strong> en preselección · <strong>${contrat}</strong> contrataciones cerradas`
+        : 'Aún no hay preselecciones ni contrataciones.';
+}
+
+function buildTipoDistribution(ofertas) {
+    const mapa = { practicas:{ label:'Prácticas', color:'#1d6fe8', value:0 }, trabajo:{ label:'Empleo', color:'#f97316', value:0 }, otros:{ label:'Otros', color:'#a855f7', value:0 } };
+    ofertas.forEach(o => { const k = mapa[o.tipo_oferta] ? o.tipo_oferta : 'otros'; mapa[k].value += o.total_postulantes || 0; });
+    return { labels:Object.values(mapa).map(m=>m.label), values:Object.values(mapa).map(m=>m.value), colors:Object.values(mapa).map(m=>m.color), total:Object.values(mapa).reduce((a,m)=>a+m.value,0) };
+}
+
+function renderTipoChart(data) {
+    const ctx = document.getElementById('chartTipos');
+    if (!ctx) return;
+    if (!dashboardCharts.tipos) {
+        dashboardCharts.tipos = new Chart(ctx, {
+            type:'bar',
+            data:{ labels:data.labels, datasets:[{ label:'Postulaciones', data:data.values, backgroundColor:data.colors, borderRadius:6 }] },
+            options:{ maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{precision:0} } } }
+        });
+    } else {
+        dashboardCharts.tipos.data.datasets[0].data = data.values;
+        dashboardCharts.tipos.update();
+    }
+    const meta = document.getElementById('chartTiposMeta');
+    if (meta && data.total) {
+        const idx = data.values.indexOf(Math.max(...data.values));
+        meta.innerHTML = `<strong>${data.labels[idx]}</strong> concentra ${Math.round((data.values[idx]/data.total)*100)}% de postulaciones.`;
+    }
+}
+
+function renderTopOfertas(ofertas) {
+    if (Array.isArray(ofertas)) {
+        topOfertasData = [...ofertas].sort((a,b) => (b.total_postulantes||0) - (a.total_postulantes||0));
+    }
+    const tbody = document.getElementById('topOfertasBody');
+    if (!tbody) return;
+    const source = Array.isArray(topOfertasData) ? topOfertasData : [];
+    const pageData = paginateData(source, 'topOfertas');
+    if (!pageData.totalItems) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:16px 0;">Sin datos</td></tr>`;
+        renderPagination('topOfertas', pageData.totalItems, pageData.page, pageData.totalPages);
+        return;
+    }
+    tbody.innerHTML = pageData.items.map(o => `
+        <tr>
+            <td><strong>${o.titulo}</strong><div style="font-size:.72rem;color:var(--text-muted);">${formatDate(o.creado_en)} · ${tipoBadge(o.estado)}</div></td>
+            <td>${o.razon_social}</td>
+            <td style="text-align:center;">${o.total_postulantes||0}</td>
+            <td style="text-align:center;"><span style="color:var(--purple);font-weight:700;">${o.total_preseleccionados||0}</span></td>
+            <td style="text-align:center;"><span style="color:var(--green);font-weight:700;">${o.total_contratados||0}</span></td>
+        </tr>`).join('');
+    renderPagination('topOfertas', pageData.totalItems, pageData.page, pageData.totalPages);
+}
+
+// ═══ EMPRESAS ═══
+async function loadEmpresas() {
+    try {
+        empresasData = await apiFetch('/admin/empresas');
+        const validIds = new Set(empresasData.map(e => e.id));
+        openEmpresaDetails = new Set([...openEmpresaDetails].filter(id => validIds.has(id)));
+        applyEmpresasFilter();
+        applyPendingFilterFor('empresas');
+    } catch(e){}
+}
+function renderEmpresas(data) {
+    const tbody = document.getElementById('empresasBody');
+    if (!tbody) return;
+    const pageData = paginateData(data, 'empresas');
+    if (!pageData.totalItems) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:16px 0;">Sin empresas para mostrar</td></tr>`;
+        renderPagination('empresas', pageData.totalItems, pageData.page, pageData.totalPages);
+        return;
+    }
+    tbody.innerHTML = pageData.items.map(e => {
+        const isOpen = openEmpresaDetails.has(e.id);
+        const detailLabel = isOpen ? 'Ocultar info' : 'Ver info';
+        const actions = [`<button class="approve-btn info" data-empresa-detail-btn="${e.id}" onclick="toggleEmpresaDetalle(${e.id})">${detailLabel}</button>`];
+        if (e.estado === 'pendiente') {
+            actions.push(`<button class="approve-btn approve" onclick="cambiarEstadoEmpresa(${e.id},'aprobado')">✓ Aprobar</button>`);
+            actions.push(`<button class="approve-btn reject" onclick="cambiarEstadoEmpresa(${e.id},'rechazado')">✗ Rechazar</button>`);
+        }
+        if (e.estado === 'aprobado') {
+            actions.push(`<button class="approve-btn reject" onclick="cambiarEstadoEmpresa(${e.id},'rechazado')">Desactivar</button>`);
+        }
+        if (e.estado === 'rechazado') {
+            actions.push(`<button class="approve-btn approve" onclick="cambiarEstadoEmpresa(${e.id},'aprobado')">Reactivar</button>`);
+        }
+        return `
+        <tr>
+            <td><strong>${e.razon_social}</strong>${e.nombre_contacto?`<div style="font-size:.75rem;color:var(--text-muted);">Contacto: ${e.nombre_contacto}</div>`:''}</td>
+            <td style="font-size:.8rem;color:var(--text-muted);">${e.ruc}</td>
+            <td>${e.sector||'—'}</td>
+            <td style="font-size:.82rem;">${e.correo}</td>
+            <td>${tipoBadge(e.estado)}</td>
+            <td class="table-actions">${actions.join(' ')}</td>
+        </tr>
+        <tr class="detail-row" id="empresaDetail-${e.id}" data-open="${isOpen}" style="display:${isOpen ? 'table-row' : 'none'};">
+            <td colspan="6">${empresaDetailCard(e)}</td>
+        </tr>`;
+    }).join('');
+    renderPagination('empresas', pageData.totalItems, pageData.page, pageData.totalPages);
+}
+function filterEmpresas(estado, btn) {
+    filtroEmpresas = estado;
+    TABLE_PAGES.empresas = 1;
+    const tabs = document.querySelectorAll('#secEmpresas .tab-bar .tab');
+    tabs.forEach(t => t.classList.remove('active'));
+    const target = btn || document.querySelector(`#secEmpresas .tab-bar .tab[data-filter="${estado}"]`) || tabs[0];
+    if (target) target.classList.add('active');
+    applyEmpresasFilter();
+}
+
+function filterEmpresasSearch() {
+    empresasSearchQuery = (document.getElementById('empresasSearch')?.value || '').toLowerCase().trim();
+    TABLE_PAGES.empresas = 1;
+    applyEmpresasFilter();
+}
+
+function applyEmpresasFilter() {
+    let filtered = filtroEmpresas === 'todas'
+        ? empresasData
+        : empresasData.filter(e => e.estado === filtroEmpresas);
+    if (empresasSearchQuery) {
+        filtered = filtered.filter(e => {
+            const hay = `${e.razon_social || ''} ${e.ruc || ''} ${e.sector || ''} ${e.correo || ''} ${e.nombre_contacto || ''}`.toLowerCase();
+            return hay.includes(empresasSearchQuery);
+        });
+    }
+    renderEmpresas(filtered);
+}
+async function cambiarEstadoEmpresa(id, estado) {
+    const r = await Swal.fire({ title:`${estado==='aprobado'?'Aprobar':'Rechazar'} empresa`, text:`¿${estado==='aprobado'?'Aprobar':'Rechazar/desactivar'} esta empresa?`, icon:'question', showCancelButton:true, confirmButtonColor:estado==='aprobado'?'#16a34a':'#dc2626', cancelButtonColor:'#94a3b8', confirmButtonText:estado==='aprobado'?'✓ Aprobar':'✗ Rechazar', cancelButtonText:'Cancelar' });
+    if (!r.isConfirmed) return;
+    try { await apiFetch('/admin/empresas/'+id+'/estado',{method:'PATCH',body:JSON.stringify({estado})}); toast(estado==='aprobado'?'✓ Empresa aprobada':'Empresa rechazada',estado==='aprobado'?'success':'info'); loadEmpresas(); loadStats(); } catch(e){toast(e.message,'error');}
+}
+
+// ═══ ESTUDIANTES ═══
+let estudiantesData = [];
+async function loadEstudiantes() {
+    try {
+        estudiantesData = await apiFetch('/admin/estudiantes');
+        const validIds = new Set(estudiantesData.map(e => e.id));
+        openEstudianteDetails = new Set([...openEstudianteDetails].filter(id => validIds.has(id)));
+        applyEstudiantesFilter();
+        applyPendingFilterFor('estudiantes');
+    } catch(e){}
+}
+function renderEstudiantes(data) {
+    const pendCount = data.filter(e => e.estado === 'pendiente').length;
+    const tab = document.getElementById('tabEstPend');
+    if (tab) tab.textContent = pendCount;
+
+    const tbody = document.getElementById('estudiantesBody');
+    if (!tbody) return;
+    const pageData = paginateData(data, 'estudiantes');
+    if (!pageData.totalItems) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:16px 0;">Sin estudiantes para mostrar</td></tr>`;
+        renderPagination('estudiantes', pageData.totalItems, pageData.page, pageData.totalPages);
+        return;
+    }
+    tbody.innerHTML = pageData.items.map(e => {
+        const isPend = e.estado === 'pendiente';
+        const isOpen = openEstudianteDetails.has(e.id);
+        const detailLabel = isOpen ? 'Ocultar ficha' : 'Ver ficha';
+        const actions = [`<button class="approve-btn info" data-estudiante-detail-btn="${e.id}" onclick="toggleEstudianteDetalle(${e.id})">${detailLabel}</button>`];
+        if (isPend) {
+            actions.push(`<button class="approve-btn approve" onclick="cambiarEstadoEstudiante(${e.id},'aprobado')">✓ Aprobar</button>`);
+            actions.push(`<button class="approve-btn reject" onclick="cambiarEstadoEstudiante(${e.id},'rechazado')">✗ Rechazar</button>`);
+        }
+        if (e.estado === 'aprobado') {
+            actions.push(`<button class="approve-btn reject" onclick="cambiarEstadoEstudiante(${e.id},'rechazado')">Desactivar</button>`);
+        }
+        if (e.estado === 'rechazado') {
+            actions.push(`<button class="approve-btn approve" onclick="cambiarEstadoEstudiante(${e.id},'aprobado')">Reactivar</button>`);
+        }
+        return `<tr style="${isPend ? 'background:rgba(245,158,11,0.04);' : ''}">
+            <td>
+                <strong>${e.nombres} ${e.apellidos}</strong>
+                ${e.nota_admin ? `<div style="font-size:.72rem;color:#92400e;margin-top:2px;">Nota: ${e.nota_admin}</div>` : ''}
+            </td>
+            <td style="font-size:.8rem;">${e.dni}</td>
+            <td style="font-size:.8rem;font-family:var(--font-mono, monospace);font-weight:600;color:var(--accent);">${e.codigo_estudiante || '—'}</td>
+            <td style="font-size:.84rem;">${e.carrera}</td>
+            <td>${tipoBadge(e.tipo)}</td>
+            <td style="font-size:.82rem;">${e.correo}</td>
+            <td>${tipoBadge(e.estado)}</td>
+            <td style="font-size:.78rem;color:var(--text-muted);">${formatDate(e.creado_en)}</td>
+            <td class="table-actions">${actions.join(' ')}</td>
+        </tr>
+        <tr class="detail-row" id="estudianteDetail-${e.id}" data-open="${isOpen}" style="display:${isOpen ? 'table-row' : 'none'};">
+            <td colspan="9">${estudianteDetailCard(e)}</td>
+        </tr>`;
+    }).join('');
+    renderPagination('estudiantes', pageData.totalItems, pageData.page, pageData.totalPages);
+}
+function filterEstudiantes(estado, btn) {
+    filtroEstudiantes = estado;
+    TABLE_PAGES.estudiantes = 1;
+    const tabs = document.querySelectorAll('#secEstudiantes .tab-bar .tab');
+    tabs.forEach(t => t.classList.remove('active'));
+    const target = btn || document.querySelector(`#secEstudiantes .tab-bar .tab[data-filter="${estado}"]`) || tabs[0];
+    if (target) target.classList.add('active');
+    applyEstudiantesFilter();
+}
+
+function filterEstudiantesSearch() {
+    estudiantesSearchQuery = (document.getElementById('estudiantesSearch')?.value || '').toLowerCase().trim();
+    TABLE_PAGES.estudiantes = 1;
+    applyEstudiantesFilter();
+}
+
+function applyEstudiantesFilter() {
+    let filtered = filtroEstudiantes === 'todos'
+        ? estudiantesData
+        : estudiantesData.filter(e => e.estado === filtroEstudiantes);
+    if (estudiantesSearchQuery) {
+        filtered = filtered.filter(e => {
+            const hay = `${e.nombres || ''} ${e.apellidos || ''} ${e.dni || ''} ${e.codigo_estudiante || ''} ${e.carrera || ''} ${e.correo || ''}`.toLowerCase();
+            return hay.includes(estudiantesSearchQuery);
+        });
+    }
+    renderEstudiantes(filtered);
+}
+async function cambiarEstadoEstudiante(id, estado) {
+    const est = estudiantesData.find(e => e.id === id);
+    const accion = estado === 'aprobado' ? 'aprobar' : 'rechazar/desactivar';
+
+    // Para rechazado, pedir nota opcional
+    let nota_admin = null;
+    if (estado === 'rechazado') {
+        const { value, isConfirmed } = await Swal.fire({
+            title: 'Rechazar solicitud',
+            html: `
+                <p style="text-align:left;font-size:.88rem;color:var(--text-soft);margin-bottom:12px;">
+                    Estudiante: <strong>${est ? est.nombres + ' ' + est.apellidos : ''}</strong><br>
+                    Código LDV: <strong>${est ? est.codigo_estudiante : ''}</strong>
+                </p>
+                <label style="display:block;text-align:left;font-size:.83rem;margin-bottom:6px;">Motivo del rechazo (opcional):</label>
+                <input id="notaInput" class="swal2-input" placeholder="Ej: Código no encontrado en el sistema">`,
+            showCancelButton: true,
+            confirmButtonText: '✗ Rechazar cuenta',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#94a3b8',
+            preConfirm: () => document.getElementById('notaInput')?.value || null
+        });
+        if (!isConfirmed) return;
+        nota_admin = value;
+    } else {
+        const r = await Swal.fire({
+            title: 'Aprobar cuenta de estudiante',
+            html: `<p style="font-size:.88rem;text-align:left;color:var(--text-soft);">
+                Nombre: <strong>${est ? est.nombres + ' ' + est.apellidos : ''}</strong><br>
+                Código LDV: <strong>${est ? est.codigo_estudiante : ''}</strong><br>
+                Carrera: <strong>${est ? est.carrera : ''}</strong><br><br>
+                ¿Confirmas que el código de estudiante es válido en el sistema institucional?
+            </p>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '✓ Sí, aprobar cuenta',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#16a34a',
+            cancelButtonColor: '#94a3b8'
+        });
+        if (!r.isConfirmed) return;
+    }
+
+    try {
+        await apiFetch(`/admin/estudiantes/${id}/estado`, {
+            method: 'PATCH',
+            body: JSON.stringify({ estado, nota_admin })
+        });
+        toast(estado === 'aprobado' ? '✓ Cuenta de estudiante aprobada' : 'Cuenta rechazada', estado === 'aprobado' ? 'success' : 'info');
+        loadEstudiantes();
+        loadStats();
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+const SOLICITUD_LABELS = {
+    empresa: {
+        correo: 'Correo corporativo', telefono: 'Teléfono', direccion: 'Dirección', sitio_web: 'Sitio web', actividad_economica: 'Actividad económica', descripcion: 'Descripción',
+        representante_nombre: 'Representante legal', representante_cargo: 'Cargo del representante', representante_dni: 'DNI del representante', password: 'Nueva contraseña'
+    },
+    estudiante: {
+        correo: 'Correo', telefono: 'Teléfono', direccion: 'Dirección', estado_civil: 'Estado civil',
+        ciclo: 'Ciclo', anio_egreso: 'Año de egreso', anio_titulacion: 'Año de titulación',
+        habilidades: 'Habilidades', password: 'Contraseña'
+    }
+};
+
+function getSolicitudLabel(tipo, campo) {
+    return SOLICITUD_LABELS[tipo]?.[campo] || campo;
+}
+
+function maskSolicitudValueAdmin(key, value) {
+    if (key === 'password' || key === 'password_hash') return '•••••••• (se actualizará al aprobar)';
+    return value || '—';
+}
+
+function getCamposEntries(item) {
+    if (!item?.campos) return [];
+    if (typeof item.campos === 'string') {
+        try { return Object.entries(JSON.parse(item.campos)); }
+        catch { return []; }
+    }
+    return Object.entries(item.campos || {});
+}
+
+function formatSolicitudCamposAdmin(item) {
+    const entries = getCamposEntries(item);
+    if (!entries.length) {
+        return '<span style="font-size:.78rem;color:var(--text-muted);">Sin campos</span>';
+    }
+    return `<ul class="campos-list">${entries.map(([k, v]) => `<li><strong>${getSolicitudLabel(item.tipo_usuario, k)}:</strong> ${maskSolicitudValueAdmin(k, v)}</li>`).join('')}</ul>`;
+}
+
+function buildCamposSummaryHTML(item) {
+    const entries = getCamposEntries(item);
+    if (!entries.length) return '<p style="text-align:left;color:#475569;">Sin cambios registrados.</p>';
+    return `<ul style="text-align:left;margin:10px 0 0 20px;color:#475569;line-height:1.6;">${entries.map(([k, v]) => `<li><strong>${getSolicitudLabel(item.tipo_usuario, k)}:</strong> ${maskSolicitudValueAdmin(k, v)}</li>`).join('')}</ul>`;
+}
+
+function renderEdiciones(data) {
+    const tbody = document.getElementById('edicionesBody');
+    if (!tbody) return;
+    const pageData = paginateData(data, 'ediciones');
+    if (!pageData.totalItems) {
+        tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state" style="margin:10px 0;">
+            <div class="empty-state-icon">✏️</div>
+            <h3>Sin solicitudes</h3>
+            <p>No hay solicitudes en esta categoría.</p>
+        </div></td></tr>`;
+        renderPagination('ediciones', pageData.totalItems, pageData.page, pageData.totalPages);
+        return;
+    }
+    tbody.innerHTML = pageData.items.map(item => {
+        const actions = item.estado === 'pendiente'
+            ? `<button class="approve-btn approve" onclick="resolverEdicion(${item.id},'aprobado')">Aprobar</button>
+               <button class="approve-btn reject" onclick="resolverEdicion(${item.id},'rechazado')">Rechazar</button>`
+            : '<span style="font-size:.76rem;color:var(--text-muted);">—</span>';
+        return `
+        <tr>
+            <td><strong>${item.solicitante || '—'}</strong><div style="font-size:.75rem;color:var(--text-muted);">${item.correo_contacto || ''}</div></td>
+            <td style="text-transform:capitalize;font-size:.82rem;">${item.tipo_usuario}</td>
+            <td>${formatSolicitudCamposAdmin(item)}${item.motivo ? `<div style="font-size:.75rem;color:var(--text-muted);margin-top:6px;">📌 ${item.motivo}</div>` : ''}${item.respuesta_admin ? `<div style="font-size:.75rem;color:var(--green);margin-top:6px;">📝 ${item.respuesta_admin}</div>` : ''}</td>
+            <td style="font-size:.78rem;color:var(--text-muted);">
+                Enviada: ${formatDate(item.creado_en)}<br>
+                ${item.resuelto_en ? `Resuelta: ${formatDate(item.resuelto_en)}` : ''}
+            </td>
+            <td>${tipoBadge(item.estado)}</td>
+            <td class="table-actions">${actions}</td>
+        </tr>`;
+    }).join('');
+    renderPagination('ediciones', pageData.totalItems, pageData.page, pageData.totalPages);
+}
+
+function applyEdicionesFilter() {
+    let filtered = filtroEdiciones === 'todos' ? edicionesData : edicionesData.filter(e => e.estado === filtroEdiciones);
+    if (edicionesSearchQuery) {
+        filtered = filtered.filter(item => {
+            const base = `${item.solicitante || ''} ${item.correo_contacto || ''} ${item.tipo_usuario || ''} ${item.motivo || ''} ${item.respuesta_admin || ''}`.toLowerCase();
+            if (base.includes(edicionesSearchQuery)) return true;
+            const entries = getCamposEntries(item);
+            return entries.some(([k, v]) => {
+                const label = getSolicitudLabel(item.tipo_usuario, k) || k;
+                return `${label} ${maskSolicitudValueAdmin(k, v)}`.toLowerCase().includes(edicionesSearchQuery);
+            });
+        });
+    }
+    renderEdiciones(filtered);
+    const badge = document.getElementById('badgeEdiciones');
+    if (badge) {
+        const pend = edicionesData.filter(e => e.estado === 'pendiente').length;
+        badge.textContent = pend;
+        badge.style.display = pend ? '' : 'none';
+    }
+}
+
+function filterEdicionesSearch() {
+    edicionesSearchQuery = (document.getElementById('edicionesSearch')?.value || '').toLowerCase().trim();
+    TABLE_PAGES.ediciones = 1;
+    applyEdicionesFilter();
+}
+
+async function loadEdiciones() {
+    try {
+        edicionesData = await apiFetch('/admin/ediciones');
+        applyEdicionesFilter();
+        applyPendingFilterFor('ediciones');
+    } catch (e) {
+        const tbody = document.getElementById('edicionesBody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6"><div class="alert alert-error show">${e.message || 'Error al cargar solicitudes.'}</div></td></tr>`;
+    }
+}
+
+function filterEdiciones(estado, btn) {
+    filtroEdiciones = estado;
+    TABLE_PAGES.ediciones = 1;
+    const tabs = document.querySelectorAll('#edicionesTabs .tab');
+    tabs.forEach(t => t.classList.remove('active'));
+    const target = btn || document.querySelector(`#edicionesTabs .tab[data-filter="${estado}"]`) || tabs[0];
+    if (target) target.classList.add('active');
+    applyEdicionesFilter();
+}
+
+async function resolverEdicion(id, estado) {
+    const item = edicionesData.find(e => e.id === id);
+    if (!item) return;
+
+    const resumenCampos = buildCamposSummaryHTML(item);
+    let respuesta = '';
+
+    if (estado === 'aprobado') {
+        const { value, isConfirmed } = await Swal.fire({
+            title: 'Aprobar solicitud',
+            html: `<p style="font-size:.9rem;color:#4b5563;text-align:left;">Se aplicarán los siguientes cambios para <strong>${item.solicitante}</strong>:</p>${resumenCampos}`,
+            input: 'textarea',
+            inputPlaceholder: 'Mensaje para el solicitante (opcional)',
+            showCancelButton: true,
+            confirmButtonColor: '#16a34a',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: '✓ Aprobar y aplicar',
+            cancelButtonText: 'Cancelar'
+        });
+        if (!isConfirmed) return;
+        respuesta = value || '';
+    } else {
+        const { value, isConfirmed } = await Swal.fire({
+            title: 'Rechazar solicitud',
+            html: `<p style="font-size:.9rem;color:#4b5563;text-align:left;">Describe brevemente el motivo del rechazo.</p>${resumenCampos}`,
+            input: 'textarea',
+            inputPlaceholder: 'Motivo del rechazo (opcional)',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: '✗ Rechazar',
+            cancelButtonText: 'Cancelar'
+        });
+        if (!isConfirmed) return;
+        respuesta = value || '';
+    }
+
+    try {
+        await apiFetch(`/admin/ediciones/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ estado, respuesta_admin: respuesta })
+        });
+        toast(estado === 'aprobado' ? '✓ Cambios aplicados' : 'Solicitud rechazada', estado === 'aprobado' ? 'success' : 'info');
+        loadEdiciones();
+        loadStats();
+    } catch (e) {
+        toast(e.message, 'error');
+    }
+}
+
+function toggleEmpresaDetalle(id) {
+    const row = document.getElementById(`empresaDetail-${id}`);
+    if (!row) return;
+    const isOpen = row.dataset.open === 'true';
+    row.style.display = isOpen ? 'none' : 'table-row';
+    row.dataset.open = (!isOpen).toString();
+    const btn = document.querySelector(`[data-empresa-detail-btn="${id}"]`);
+    if (btn) btn.textContent = isOpen ? 'Ver info' : 'Ocultar info';
+    if (isOpen) {
+        openEmpresaDetails.delete(id);
+    } else {
+        openEmpresaDetails.add(id);
+    }
+}
+
+function toggleEstudianteDetalle(id) {
+    const row = document.getElementById(`estudianteDetail-${id}`);
+    if (!row) return;
+    const isOpen = row.dataset.open === 'true';
+    row.style.display = isOpen ? 'none' : 'table-row';
+    row.dataset.open = (!isOpen).toString();
+    const btn = document.querySelector(`[data-estudiante-detail-btn="${id}"]`);
+    if (btn) btn.textContent = isOpen ? 'Ver ficha' : 'Ocultar ficha';
+    if (isOpen) {
+        openEstudianteDetails.delete(id);
+    } else {
+        openEstudianteDetails.add(id);
+    }
+}
+
+function empresaDetailCard(e) {
+    const estadoLabel = e?.estado ? e.estado.charAt(0).toUpperCase() + e.estado.slice(1) : '—';
+    return `
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <div>
+                    <div class="detail-card-title">${e.razon_social || 'Empresa sin nombre'}</div>
+                    <div class="detail-card-subtitle">Actividad: ${e.actividad_economica || '—'}</div>
+                </div>
+                <div class="detail-badges">${tipoBadge(e.estado)}</div>
+            </div>
+            <div class="detail-grid">
+                <div>
+                    <strong>Contacto / RRHH</strong>
+                    <div>${e.nombre_contacto || 'No asignado'}</div>
+                    <div>Tel: ${e.telefono || '—'}</div>
+                    <div>Correo: ${e.correo || '—'}</div>
+                </div>
+                <div>
+                    <strong>Dirección y sector</strong>
+                    <div>${e.direccion || 'Sin dirección registrada'}</div>
+                    <div>Sector: ${e.sector || '—'}</div>
+                    <div>RUC: ${e.ruc || '—'}</div>
+                </div>
+                <div>
+                    <strong>Representante legal</strong>
+                    <div>${e.representante_nombre || '—'}</div>
+                    <div>${e.representante_cargo || ''}</div>
+                    <div>Documento: ${e.representante_dni || '—'}</div>
+                </div>
+                <div>
+                    <strong>Registro</strong>
+                    <div>Creada: ${formatDate(e.creado_en)}</div>
+                    <div>Estado actual: ${estadoLabel}</div>
+                </div>
+            </div>
+            ${e.descripcion ? `<div class="detail-description"><strong>Descripción de la empresa</strong><p>${truncate(e.descripcion, 320)}</p></div>` : ''}
+        </div>`;
+}
+
+function estudianteDetailCard(e) {
+    // Determinar tipo
+    const esEgresado = e.tipo === 'egresado';
+    const esTitulado = e.tipo === 'titulado';
+    const esEstudiante = !esEgresado && !esTitulado;
+
+    return `
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <div>
+                    <div class="detail-card-title">${e.nombres || ''} ${e.apellidos || ''}</div>
+                    <div class="detail-card-subtitle">Código LDV: ${e.codigo_estudiante || '—'}</div>
+                </div>
+                <div class="detail-badges">${tipoBadge(e.tipo)} ${tipoBadge(e.estado)}</div>
+            </div>
+            <div class="detail-grid">
+                <div>
+                    <strong>Contacto</strong>
+                    <div>Correo: ${e.correo || '—'}</div>
+                    <div>Teléfono: ${e.telefono || '—'}</div>
+                    <div>Dirección: ${e.direccion || '—'}</div>
+                </div>
+                <div>
+                    <strong>Datos personales</strong>
+                    <div>DNI: ${e.dni || '—'}</div>
+                    <div>Nacionalidad: ${e.nacionalidad || '—'}</div>
+                    <div>Estado civil: ${e.estado_civil || '—'}</div>
+                    <div>Nacimiento: ${formatDate(e.fecha_nacimiento)}</div>
+                </div>
+                <div>
+                    <strong>Perfil académico</strong>
+                    <div>Carrera: ${e.carrera || '—'}</div>
+                    ${esEstudiante ? `<div>Ciclo: ${e.ciclo || '—'}</div>` : ''}
+                    ${(esEgresado || esTitulado) ? `<div>Año egreso: ${e.anio_egreso || '—'}</div>` : ''}
+                    ${esTitulado ? `<div>Año titulación: ${e.anio_titulacion || '—'}</div>` : ''}
+                </div>
+                <div>
+                    <strong>Registro</strong>
+                    <div>Creado: ${formatDate(e.creado_en)}</div>
+                    <div>Condición: ${tipoBadge(e.tipo)}</div>
+                </div>
+            </div>
+            ${e.habilidades ? `<div class="detail-description"><strong>Habilidades declaradas</strong><p>${e.habilidades}</p></div>` : ''}
+        </div>`;
+}
+
+// ═══ OFERTAS ═══
+async function loadOfertas() {
+    try {
+        ofertasData = await apiFetch('/admin/ofertas');
+        filterOfertasAdmin(false);
+    } catch(e){}
+}
+
+function renderOfertasAdmin(data) {
+    const tbody = document.getElementById('ofertasBody');
+    if (!tbody) return;
+    const pageData = paginateData(data, 'ofertas');
+    if (!pageData.totalItems) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:16px 0;">Sin ofertas con esos filtros</td></tr>`;
+        renderPagination('ofertas', pageData.totalItems, pageData.page, pageData.totalPages);
+        return;
+    }
+    tbody.innerHTML = pageData.items.map(o => `
+        <tr class="row-click" onclick="openAdminOfertaDetail(${o.id})">
+            <td><strong>${o.titulo}</strong></td>
+            <td style="font-size:.84rem;">${o.razon_social}</td>
+            <td>${tipoBadge(o.tipo_oferta)}</td>
+            <td>${tipoBadge(o.dirigido_a)}</td>
+            <td>${tipoBadge(o.estado)}</td>
+            <td style="text-align:center;">${o.total_postulantes||0}</td>
+            <td style="text-align:center;color:var(--purple);font-weight:700;">${o.total_preseleccionados||0}</td>
+            <td style="text-align:center;color:var(--green);font-weight:700;">${o.total_seleccionados||0}</td>
+            <td style="font-size:.78rem;color:var(--text-muted);">${formatDate(o.creado_en)}</td>
+        </tr>`).join('');
+    renderPagination('ofertas', pageData.totalItems, pageData.page, pageData.totalPages);
+}
+
+function openAdminOfertaDetail(id) {
+    const offer = ofertasData.find(o => o.id === id);
+    if (!offer) return;
+    const titleEl = document.getElementById('modalOfertaTitle');
+    const bodyEl = document.getElementById('modalOfertaBody');
+    if (titleEl) titleEl.textContent = offer.titulo || 'Detalle de la oferta';
+
+    const company = offer.razon_social || offer.nombre_empresa || '—';
+    bodyEl.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div class="company-avatar" style="width:44px;height:44px;">${initials(company || 'E')}</div>
+            <div>
+                <div style="font-weight:700;font-size:.95rem;">${escapeHtml(company)}</div>
+                <div style="font-size:.78rem;color:var(--text-muted);">${escapeHtml(offer.sector || '')}</div>
+            </div>
+        </div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;">
+            ${tipoBadge(offer.tipo_oferta)} ${tipoBadge(offer.dirigido_a)} ${tipoBadge(offer.modalidad)}
+            ${offer.salario_rango ? `<span class="badge badge-green">💰 ${escapeHtml(offer.salario_rango)}</span>` : ''}
+            ${offer.vacantes ? `<span class="badge badge-gray">${offer.vacantes} vacante${offer.vacantes > 1 ? 's' : ''}</span>` : ''}
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-size:.82rem;color:var(--text-muted);">
+            ${offer.vacantes ? `<span>👤 ${offer.vacantes} vacante${offer.vacantes > 1 ? 's' : ''}</span>` : ''}
+            ${offer.horario ? `<span>⏰ ${escapeHtml(offer.horario)}</span>` : ''}
+            ${offer.fecha_limite ? `<span>📅 Hasta ${formatDate(offer.fecha_limite)}</span>` : '<span>📅 Sin fecha límite</span>'}
+        </div>
+        ${offer.carrera_afin ? `<div style="font-size:.82rem;color:var(--accent);margin-bottom:14px;">📚 Carreras afines: <strong>${escapeHtml(offer.carrera_afin)}</strong></div>` : ''}
+        <div style="border-top:1px solid var(--border);margin:10px 0 16px;"></div>
+        <div style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Descripción del puesto</div>
+        <div style="font-size:.9rem;color:var(--text-2);line-height:1.6;white-space:pre-wrap;">${escapeHtml(offer.descripcion || '—')}</div>
+        ${offer.requisitos ? `
+        <div style="margin-top:16px;">
+            <div style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Requisitos</div>
+            <div style="font-size:.9rem;color:var(--text-2);line-height:1.6;white-space:pre-wrap;">${escapeHtml(offer.requisitos)}</div>
+        </div>` : ''}
+        ${offer.beneficios ? `
+        <div style="margin-top:16px;">
+            <div style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Beneficios</div>
+            <div style="font-size:.9rem;color:var(--text-2);line-height:1.6;white-space:pre-wrap;">${escapeHtml(offer.beneficios)}</div>
+        </div>` : ''}
+        ${offer.actividades ? `
+        <div style="margin-top:16px;">
+            <div style="font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">Actividades</div>
+            <div style="font-size:.9rem;color:var(--text-2);line-height:1.6;white-space:pre-wrap;">${escapeHtml(offer.actividades)}</div>
+        </div>` : ''}
+    `;
+
+    document.getElementById('modalOfertaAdmin').classList.add('open');
+}
+
+function closeAdminOfertaDetail() {
+    document.getElementById('modalOfertaAdmin').classList.remove('open');
+}
+
+const modalOfertaAdmin = document.getElementById('modalOfertaAdmin');
+if (modalOfertaAdmin) {
+    modalOfertaAdmin.addEventListener('click', e => {
+        if (e.target.id === 'modalOfertaAdmin') closeAdminOfertaDetail();
+    });
+}
+
+function filterOfertasAdmin(resetPage = true) {
+    if (resetPage) TABLE_PAGES.ofertas = 1;
+    const q = (document.getElementById('ofertaSearch')?.value || '').toLowerCase();
+    const tipo = document.getElementById('ofertaTipoFilter')?.value || '';
+    const dirigido = document.getElementById('ofertaDirigidoFilter')?.value || '';
+    const estado = document.getElementById('ofertaEstadoFilter')?.value || '';
+    let filtered = ofertasData;
+
+    if (tipo) {
+        filtered = tipo === 'otros'
+            ? filtered.filter(o => o.tipo_oferta !== 'practicas' && o.tipo_oferta !== 'trabajo')
+            : filtered.filter(o => o.tipo_oferta === tipo);
+    }
+    if (dirigido) filtered = filtered.filter(o => o.dirigido_a === dirigido);
+    if (estado) filtered = filtered.filter(o => o.estado === estado);
+    if (q) {
+        filtered = filtered.filter(o =>
+            (o.titulo || '').toLowerCase().includes(q) ||
+            (o.razon_social || '').toLowerCase().includes(q)
+        );
+    }
+
+    renderOfertasAdmin(filtered);
+}
+
+// ═══ POSTULACIONES ═══
+async function loadPostulaciones() {
+    try {
+        postulacionesData = await apiFetch('/admin/postulaciones');
+        filterPostulacionesAdmin(false);
+    } catch(e){}
+}
+
+function renderPostulacionesAdmin(data, hasFilters) {
+    const tbody = document.getElementById('postulacionesBody');
+    if (!tbody) return;
+    const pageData = paginateData(data, 'postulaciones');
+    if (!pageData.totalItems) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:16px 0;">${hasFilters ? 'Sin resultados con esos filtros' : 'Sin postulaciones registradas'}</td></tr>`;
+        renderPagination('postulaciones', pageData.totalItems, pageData.page, pageData.totalPages);
+        return;
+    }
+    tbody.innerHTML = pageData.items.map(p => `
+        <tr>
+            <td><strong>${p.nombre_estudiante}</strong><div style="font-size:.75rem;color:var(--text-muted);">DNI: ${p.dni}</div></td>
+            <td style="font-size:.83rem;">${p.carrera}</td>
+            <td style="font-size:.83rem;">${p.titulo_oferta}</td>
+            <td style="font-size:.83rem;">${p.nombre_empresa}</td>
+            <td>${p.postulacion_cerrada ? '<span class="badge badge-gray">🔒 Cerrado</span>' : tipoBadge(p.estado_postulacion)}</td>
+            <td><button type="button" class="btn btn-ghost btn-sm" onclick="openCv(${p.postulacion_id})">📄 CV</button></td>
+            <td style="font-size:.76rem;color:var(--text-muted);">${formatDate(p.fecha_postulacion)}</td>
+        </tr>`).join('');
+    renderPagination('postulaciones', pageData.totalItems, pageData.page, pageData.totalPages);
+}
+
+function filterPostulacionesAdmin(resetPage = true) {
+    if (resetPage) TABLE_PAGES.postulaciones = 1;
+    const q = (document.getElementById('postulacionSearch')?.value || '').toLowerCase();
+    const estado = document.getElementById('postulacionEstadoFilter')?.value || '';
+    let filtered = postulacionesData;
+
+    if (estado) {
+        if (estado === 'cerrado') {
+            filtered = filtered.filter(p => Boolean(p.postulacion_cerrada));
+        } else if (estado === 'preseleccionado') {
+            filtered = filtered.filter(p => p.estado_postulacion === 'seleccionado' && !p.postulacion_cerrada);
+        } else {
+            filtered = filtered.filter(p => p.estado_postulacion === estado);
+        }
+    }
+
+    if (q) {
+        filtered = filtered.filter(p =>
+            (p.nombre_estudiante || '').toLowerCase().includes(q) ||
+            (p.dni || '').toLowerCase().includes(q) ||
+            (p.carrera || '').toLowerCase().includes(q) ||
+            (p.titulo_oferta || '').toLowerCase().includes(q) ||
+            (p.nombre_empresa || '').toLowerCase().includes(q)
+        );
+    }
+
+    renderPostulacionesAdmin(filtered, Boolean(q || estado));
+}
+
+// ═══ PRESELECCIÓN — Documentos PDF ═══
+const DOCS_PDF_PRACT = [
+    { tipo: 'carta_aceptacion',        icon: '📜', label: 'Carta de Aceptación', sub: 'Anexo 2 — EFSRT' },
+    { tipo: 'constancia_efsrt',        icon: '📋', label: 'Constancia de EFSRT', sub: 'Anexo 4 — Para la empresa' },
+    { tipo: 'ficha_supervision',       icon: '📝', label: 'Ficha de Supervisión', sub: 'Anexo 6 — Docente supervisor' },
+    { tipo: 'carta_presentacion_inst', icon: '🏫', label: 'Carta de Presentación', sub: 'Presentación oficial del Instituto LDV a la empresa' },
+    { tipo: 'certificado_practicas',   icon: '📋', label: 'Convenio EFSRT', sub: 'Anexo 3 — Convenio de Experiencia Formativa' },
+    { tipo: 'informe_practicas',       icon: '📝', label: 'Ficha de Evaluación', sub: 'Anexo 5 — Evaluación del supervisor en la empresa' }
+];
+
+const DOCS_PDF_EGRESADO = [
+    { tipo: 'carta_presentacion_egresado', icon: '📄', label: 'Carta de Presentación (Egresados)', sub: 'Formato oficial para egresados/titulados' }
+];
+
+const DOCS_PDF_TITULADO = [
+    { tipo: 'carta_presentacion_titulado', icon: '📄', label: 'Carta de Presentación (Titulados)', sub: 'Formato oficial para titulados' }
+];
+
+const DOCS_PDF_ALL = [...DOCS_PDF_PRACT, ...DOCS_PDF_EGRESADO, ...DOCS_PDF_TITULADO];
+
+async function loadPreseleccion() {
+    const el = document.getElementById('preseleccionList');
+    try {
+        preseleccionData = await apiFetch('/admin/preseleccionados');
+        document.getElementById('badgePresel').textContent = preseleccionData.length;
+        filterPreseleccionAdmin();
+    } // fin del try
+    catch (e) {
+        el.innerHTML = `<div class="alert alert-error show">${e.message}</div>`;
+    }
+}
+
+function renderPreseleccionList(data, hasFilters) {
+    const el = document.getElementById('preseleccionList');
+    if (!el) return;
+    if (!data.length) {
+        if (hasFilters && preseleccionData.length) {
+            el.innerHTML = `<div class="empty-state">
+                <div class="empty-state-icon">🔎</div>
+                <h3>Sin resultados con esos filtros</h3>
+                <p>Prueba con otro nombre o puesto.</p>
+            </div>`;
+        } else {
+            el.innerHTML = `<div class="empty-state">
+                <div class="empty-state-icon">⭐</div>
+                <h3>Sin candidatos en preselección</h3>
+                <p>Cuando una empresa marque a un candidato como preseleccionado, aparecerá aquí para que puedas generar los documentos oficiales y confirmar la contratación.</p>
+            </div>`;
+        }
+        return;
+    }
+
+    el.innerHTML = data.map(s => {
+            const esTitulado = s.tipo_estudiante === 'titulado';
+            const esEgresado = s.tipo_estudiante === 'egresado';
+            const esPract = s.tipo_estudiante === 'practicante' || (!esTitulado && !esEgresado);
+            const docsGenerados = new Set((s.docs_generados || '').split(',').map(t => t.trim()).filter(Boolean));
+            const hasDocsState = docsGenerados.size > 0;
+            const docFlag = Number(s.doc_principal_generada) === 1;
+            const docGenerada = hasDocsState
+                ? (esPract
+                    ? docsGenerados.has('carta_aceptacion')
+                    : (esTitulado
+                        ? docsGenerados.has('carta_presentacion_titulado')
+                        : docsGenerados.has('carta_presentacion_egresado')))
+                : (docFlag
+                    ? true
+                    : (esPract
+                        ? !!s.carta_generada
+                        : (esTitulado ? !!s.carta_titulado_generada : !!s.carta_egresado_generada)));
+            const numeroDoc = esPract
+                ? s.numero_carta
+                : (esTitulado ? s.numero_carta_titulado : s.numero_carta_egresado);
+            const fechaDoc = esPract
+                ? s.carta_generada
+                : (esTitulado ? s.carta_titulado_generada : s.carta_egresado_generada);
+            const docs = esPract ? DOCS_PDF_PRACT : (esTitulado ? DOCS_PDF_TITULADO : DOCS_PDF_EGRESADO);
+            const docBtns = docs.map(doc => {
+                const done = docsGenerados.has(doc.tipo);
+                return `
+                <button class="doc-btn${done ? ' doc-done' : ''}" title="${doc.label}" onclick="descargarDoc(${s.postulacion_id}, '${doc.tipo}', '${s.nombre_estudiante.replace(/'/g,"\\'")}', this)">
+                    <span class="doc-icon">${doc.icon}</span>
+                    <span class="doc-info">
+                        <strong>${doc.label}</strong>
+                        <em>${doc.sub}</em>
+                    </span>
+                    <span class="doc-dl">${done ? '✓' : '↓'}</span>
+                </button>`;
+            }).join('');
+
+            return `
+        <div class="presel-card" id="presel-${s.postulacion_id}">
+            <div class="pc-header">
+                <div class="avatar" style="width:48px;height:48px;flex-shrink:0;">${initials(s.nombre_estudiante)}</div>
+                <div style="flex:1;">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <strong style="font-size:1rem;">${s.nombre_estudiante}</strong>
+                        <span class="badge badge-purple">⏳ Preseleccionado</span>
+                    </div>
+                    <div style="font-size:.82rem;color:var(--text-muted);margin-top:3px;">
+                        ${s.carrera} · DNI: ${s.dni} · Cód: ${s.codigo_estudiante || '—'} · ${tipoBadge(s.tipo_estudiante)}
+                    </div>
+                </div>
+                <div style="font-size:.75rem;color:var(--text-muted);text-align:right;flex-shrink:0;">
+                    Seleccionado ${timeAgo(s.actualizado_en)}
+                </div>
+            </div>
+
+            <div class="pc-info-grid">
+                <div class="info-item">📧 <span>${s.correo_estudiante}</span></div>
+                <div class="info-item">📱 <span>${s.telefono || '—'}</span></div>
+                <div class="info-item">🏢 <strong>${s.nombre_empresa}</strong></div>
+                <div class="info-item">📍 <span>${s.modalidad ? s.modalidad[0].toUpperCase()+s.modalidad.slice(1) : '—'}${s.horario ? ' · '+s.horario : ''}</span></div>
+                <div class="info-item" style="grid-column:1/-1;">💼 <strong>${s.titulo_oferta}</strong> · ${tipoBadge(s.tipo_oferta)} · ${s.horas_practicas || 128} horas mínimas</div>
+            </div>
+
+            <!-- Estado carta -->
+            <div class="pc-carta-status ${docGenerada ? 'generada' : 'pendiente'}">
+                ${docGenerada
+                    ? (esPract
+                        ? `📜 <strong>Documentos emitidos</strong> el ${formatDate(fechaDoc)} · N° ${numeroDoc || '—'} — Puedes confirmar la contratación`
+                        : (esTitulado
+                            ? `📄 <strong>Carta de Presentación de Titulados emitida</strong> el ${formatDate(fechaDoc)} · N° ${numeroDoc || '—'} — Puedes confirmar la contratación`
+                            : `📄 <strong>Carta de Presentación de Egresados emitida</strong> el ${formatDate(fechaDoc)} · N° ${numeroDoc || '—'} — Puedes confirmar la contratación`
+                          )
+                      )
+                    : (esPract
+                        ? `⚠️ <strong>Documentos pendientes</strong> — Genera al menos la Carta de Aceptación antes de confirmar`
+                        : (esTitulado
+                            ? `⚠️ <strong>Documento pendiente</strong> — Genera la Carta de Presentación de Titulados antes de confirmar`
+                            : `⚠️ <strong>Documento pendiente</strong> — Genera la Carta de Presentación de Egresados antes de confirmar`
+                          )
+                      )
+                }
+            </div>
+
+            <!-- Los 6 PDFs -->
+            <div style="margin:14px 0 4px;">
+                <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px;">
+                    📄 Documentos oficiales a generar
+                </div>
+                <div class="docs-grid" id="docsGrid-${s.postulacion_id}">
+                    ${docBtns}
+                </div>
+            </div>
+
+            <div class="pc-actions">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="openCv(${s.postulacion_id})">📄 Ver CV</button>
+
+                <button class="btn btn-ghost btn-sm" onclick="deseleccionarPostulacion(${s.postulacion_id}, '${s.nombre_estudiante.replace(/'/g,"\\'")}', '${s.nombre_empresa.replace(/'/g,"\\'")}')">
+                    ↩️ Devolver a la empresa
+                </button>
+
+                <button class="btn btn-sm ${docGenerada ? 'btn-success' : 'btn-ghost'}"
+                    style="${docGenerada ? '' : 'opacity:.45;cursor:not-allowed;'}"
+                    id="btnCerrar-${s.postulacion_id}"
+                    data-tipo-estudiante="${s.tipo_estudiante}"
+                    onclick="cerrarPostulacion(${s.postulacion_id}, ${docGenerada}, this, '${s.tipo_estudiante}')"
+                    ${docGenerada ? '' : 'disabled'}>
+                    🔒 Confirmar contratación
+                </button>
+
+                <div style="margin-left:auto;font-size:.77rem;color:var(--text-muted);">
+                    Postulado el ${formatDate(s.fecha_postulacion)}
+                </div>
+            </div>
+        </div>`;
+        }).join('');
+}
+
+function filterPreseleccionAdmin() {
+    const q = (document.getElementById('preseleccionSearch')?.value || '').toLowerCase();
+    let filtered = preseleccionData;
+    if (q) {
+        filtered = filtered.filter(s =>
+            (s.nombre_estudiante || '').toLowerCase().includes(q) ||
+            (s.dni || '').toLowerCase().includes(q) ||
+            (s.carrera || '').toLowerCase().includes(q) ||
+            (s.titulo_oferta || '').toLowerCase().includes(q) ||
+            (s.nombre_empresa || '').toLowerCase().includes(q) ||
+            (s.codigo_estudiante || '').toLowerCase().includes(q)
+        );
+    }
+    renderPreseleccionList(filtered, Boolean(q));
+}
+
+async function descargarDoc(postulacionId, tipo, nombreEstudiante, btn) {
+    const prev = btn.innerHTML;
+    btn.classList.add('doc-loading');
+    btn.querySelector('.doc-dl').textContent = '⏳';
+    try {
+        const res = await fetch(`/api/admin/documentos/${postulacionId}/${tipo}`, {
+            headers: { 'Authorization': 'Bearer ' + Auth.getToken() }
+        });
+        if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Error'); }
+        const blob = await res.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        const nombres_doc = {
+            carta_aceptacion:        'Carta_Aceptacion',
+            constancia_efsrt:        'Constancia_EFSRT',
+            ficha_supervision:       'Ficha_Supervision',
+            carta_presentacion_inst: 'Carta_Presentacion',
+            carta_presentacion_egresado: 'Carta_Presentacion_Egresado',
+            carta_presentacion_titulado: 'Carta_Presentacion_Titulado',
+            certificado_practicas:   'Certificado_Practicas',
+            informe_practicas:       'Informe_Practicas'
+        };
+        a.download = `${nombres_doc[tipo] || tipo}_${nombreEstudiante.replace(/\s+/g,'_')}.pdf`;
+        a.click();
+
+        // Si es carta de aceptación o carta de egresados, habilitar el botón de cerrar
+        if (tipo === 'carta_aceptacion' || tipo === 'carta_presentacion_egresado' || tipo === 'carta_presentacion_titulado') {
+            const btnCerrar = document.getElementById(`btnCerrar-${postulacionId}`);
+            if (btnCerrar) {
+                btnCerrar.disabled = false;
+                btnCerrar.style.opacity = '1';
+                btnCerrar.style.cursor = 'pointer';
+                btnCerrar.classList.remove('btn-ghost');
+                btnCerrar.classList.add('btn-success');
+                const tipoEst = btnCerrar.dataset?.tipoEstudiante || 'practicante';
+                btnCerrar.setAttribute('onclick', `cerrarPostulacion(${postulacionId}, true, this, '${tipoEst}')`);
+            }
+            const card = btn.closest('.presel-card');
+            if (card) {
+                const status = card.querySelector('.pc-carta-status');
+                if (status) {
+                    status.className = 'pc-carta-status generada';
+                    status.innerHTML = tipo === 'carta_aceptacion'
+                        ? `📜 <strong>Carta de Aceptación emitida</strong> — Ya puedes confirmar la contratación`
+                        : (tipo === 'carta_presentacion_titulado'
+                            ? `📄 <strong>Carta de Presentación de Titulados emitida</strong> — Ya puedes confirmar la contratación`
+                            : `📄 <strong>Carta de Presentación de Egresados emitida</strong> — Ya puedes confirmar la contratación`
+                          );
+                }
+            }
+        }
+
+        toast(`✓ ${btn.querySelector('strong')?.textContent || 'Documento'} descargado`, 'success');
+        btn.querySelector('.doc-dl').textContent = '✓';
+        btn.classList.remove('doc-loading');
+        btn.classList.add('doc-done');
+    } catch(e) {
+        toast(e.message, 'error');
+        btn.querySelector('.doc-dl').textContent = '↓';
+        btn.classList.remove('doc-loading');
+    }
+}
+
+async function cerrarPostulacion(postulacionId, docGenerada, btn, tipoEstudiante = 'practicante') {
+    if (!docGenerada) {
+        const msg = tipoEstudiante === 'practicante'
+            ? 'Genera al menos la Carta de Aceptación antes de confirmar la contratación.'
+            : (tipoEstudiante === 'titulado'
+                ? 'Genera la Carta de Presentación de Titulados antes de confirmar la contratación.'
+                : 'Genera la Carta de Presentación de Egresados antes de confirmar la contratación.');
+        toast(msg, 'warning');
+        return;
+    }
+    const confirm = await Swal.fire({
+        title: 'Confirmar contratación',
+        html: `<p style="font-size:.9rem;color:#4a6a8a;text-align:left;">Esta acción finalizará el proceso:</p>
+               <ul style="text-align:left;font-size:.87rem;color:#4a6a8a;margin:10px 0 0 20px;line-height:1.9;">
+                 <li>El candidato queda registrado como <strong>Contratado</strong></li>
+                 <li>La oferta se cerrará</li>
+                 <li>El candidato pasará a la sección Contratados</li>
+               </ul>
+               <p style="font-size:.8rem;color:#94a3b8;margin-top:10px;text-align:left;">⚠️ No se puede deshacer.</p>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: '✅ Confirmar contratación',
+        cancelButtonText: 'Cancelar'
+    });
+    if (!confirm.isConfirmed) return;
+    const prev = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> Cerrando...'; btn.disabled = true;
+    try {
+        await apiFetch(`/postulaciones/${postulacionId}/cerrar`, { method:'PATCH', body:JSON.stringify({}) });
+        await Swal.fire({ title:'¡Contratación confirmada!', text:'El candidato fue registrado como Contratado y la oferta fue cerrada.', icon:'success', confirmButtonColor:'#059669' });
+        loadPreseleccion();
+        loadStats();
+    } catch (e) { toast(e.message, 'error'); btn.innerHTML = prev; btn.disabled = false; }
+}
+
+async function deseleccionarPostulacion(postulacionId, nombreEstudiante, nombreEmpresa) {
+    const result = await Swal.fire({
+        title: 'Devolver candidato a revisión',
+        html: `<p style="font-size:.9rem;color:#4b5563;text-align:left;">
+                Explica a <strong>${nombreEmpresa}</strong> por qué se retiro a <strong>${nombreEstudiante}</strong> de la preselección.
+                Este mensaje aparecerá en su panel para que puedan elegir a otra persona.
+            </p>`,
+        input: 'textarea',
+        inputPlaceholder: 'Ej: Faltan documentos firmados o la carta de aceptación no fue subida...',
+        inputValidator: val => !val || !val.trim() ? 'Describe el motivo para la empresa.' : null,
+        showCancelButton: true,
+        confirmButtonText: '↩️ Devolver a la empresa',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#f97316',
+        cancelButtonColor: '#94a3b8'
+    });
+    if (!result.isConfirmed) return;
+    const motivo = (result.value || '').trim();
+    if (!motivo) {
+        toast('Describe el motivo para la empresa.', 'warning');
+        return;
+    }
+    try {
+        await apiFetch(`/postulaciones/${postulacionId}/deseleccionar`, {
+            method: 'PATCH',
+            body: JSON.stringify({ motivo })
+        });
+        toast('Postulante devuelto a la empresa con tu nota.', 'info');
+        loadPreseleccion();
+        loadStats();
+    } catch (e) { toast(e.message, 'error'); }
+}
+
+// ═══ CONTRATADOS ═══
+async function loadContratados() {
+    const el = document.getElementById('contratadosList');
+    try {
+        contratadosData = await apiFetch('/admin/contratados');
+        filterContratadosAdmin();
+    } catch(e) {
+        el.innerHTML = `<div class="alert alert-error show">${e.message}</div>`;
+    }
+}
+
+function renderContratadosList(data, hasFilters) {
+    const el = document.getElementById('contratadosList');
+    if (!el) return;
+    if (!data.length) {
+        if (hasFilters && contratadosData.length) {
+            el.innerHTML = `<div class="empty-state">
+                <div class="empty-state-icon">🔎</div>
+                <h3>Sin resultados con esos filtros</h3>
+                <p>Prueba con otro nombre o puesto.</p>
+            </div>`;
+        } else {
+            el.innerHTML = `<div class="empty-state">
+                <div class="empty-state-icon">✅</div>
+                <h3>Sin contrataciones cerradas aún</h3>
+                <p>Aquí aparecerán los candidatos cuyo proceso fue completado.</p>
+            </div>`;
+        }
+        return;
+    }
+
+    const label = hasFilters ? 'encontrada' : 'completada';
+    el.innerHTML = `
+        <div style="background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.18);border-radius:var(--radius);padding:13px 16px;margin-bottom:18px;font-size:.84rem;color:var(--green);">
+            ✅ <strong>${data.length} contratación${data.length!==1?'es':''} ${label}${data.length!==1?'s':''}</strong> — Documentos emitidos y vacante cerrada.
+        </div>
+        ${data.map(s => `
+        <div class="contratado-row">
+            <div class="avatar" style="width:42px;height:42px;font-size:.9rem;flex-shrink:0;">${initials(s.nombre_estudiante)}</div>
+            <div class="info">
+                <strong>${s.nombre_estudiante}</strong>
+                <p>${s.carrera} · DNI: ${s.dni}${s.codigo_estudiante ? ' · Cód: '+s.codigo_estudiante : ''}</p>
+            </div>
+            <div style="flex:1;min-width:180px;">
+                <div style="font-size:.85rem;font-weight:600;">${s.titulo_oferta}</div>
+                <div style="font-size:.78rem;color:var(--text-muted);">${s.nombre_empresa} · ${tipoBadge(s.tipo_oferta)}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+                <span class="badge badge-green">✅ Contratado</span>
+                <div style="font-size:.72rem;color:var(--text-muted);margin-top:4px;">Nro: ${s.numero_carta||'—'}</div>
+                <div style="font-size:.72rem;color:var(--text-muted);">${formatDate(s.carta_generada)}</div>
+            </div>
+            <div style="flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="openCv(${s.postulacion_id})">📄 CV</button>
+                <button class="btn btn-ghost btn-sm" onclick="descargarDocContratado(${s.postulacion_id},'${s.nombre_estudiante.replace(/'/g,"\\'")}')">📄 Docs</button>
+            </div>
+        </div>`).join('')}`;
+}
+
+function filterContratadosAdmin() {
+    const q = (document.getElementById('contratadosSearch')?.value || '').toLowerCase();
+    let filtered = contratadosData;
+    if (q) {
+        filtered = filtered.filter(s =>
+            (s.nombre_estudiante || '').toLowerCase().includes(q) ||
+            (s.dni || '').toLowerCase().includes(q) ||
+            (s.codigo_estudiante || '').toLowerCase().includes(q) ||
+            (s.carrera || '').toLowerCase().includes(q) ||
+            (s.titulo_oferta || '').toLowerCase().includes(q) ||
+            (s.nombre_empresa || '').toLowerCase().includes(q)
+        );
+    }
+    renderContratadosList(filtered, Boolean(q));
+}
+
+async function descargarDocContratado(postulacionId, nombre) {
+    const { value } = await Swal.fire({
+        title: 'Descargar documento',
+        input: 'select',
+        inputOptions: Object.fromEntries(DOCS_PDF_ALL.map(d => [d.tipo, `${d.icon} ${d.label}`])),
+        showCancelButton: true,
+        confirmButtonText: 'Descargar',
+        cancelButtonText: 'Cancelar'
+    });
+    if (!value) return;
+    const btn = { innerHTML: '↓', querySelector: (s) => null, classList: { add:()=>{}, remove:()=>{} } };
+    await descargarDoc(postulacionId, value, nombre, { innerHTML: '↓', querySelector: () => ({ textContent:'↓' }), closest: () => null, classList: { add:()=>{}, remove:()=>{}, contains:()=>false }, getAttribute: ()=>null, setAttribute:()=>{} });
+}
+
+// ═══ CONFIGURACIÓN ═══
+async function loadConfiguracion() {
+    try {
+        const cfg = await apiFetch('/admin/configuracion');
+        const set = (id, key) => {
+            const el = document.getElementById(id);
+            if (el && cfg[key]) el.value = cfg[key].valor || '';
+        };
+        set('cfg_responsable_nombre', 'responsable_bolsa_nombre');
+        set('cfg_responsable_cargo',  'responsable_bolsa_cargo');
+        set('cfg_responsable_correo', 'responsable_bolsa_correo');
+        set('cfg_docente_nombre',     'docente_supervisor_nombre');
+        set('cfg_docente_cargo',      'docente_supervisor_cargo');
+        set('cfg_instituto_razon',    'instituto_razon_social');
+        set('cfg_instituto_ruc',      'instituto_ruc');
+        set('cfg_instituto_direccion','instituto_direccion');
+        set('cfg_instituto_rep_nombre','instituto_representante_nombre');
+        set('cfg_instituto_rep_dni',  'instituto_representante_dni');
+    } catch(e) { toast('Error al cargar configuración', 'error'); }
+}
+
+async function guardarConfiguracion() {
+    const get = id => document.getElementById(id)?.value?.trim() || '';
+    const body = {
+        responsable_bolsa_nombre:  get('cfg_responsable_nombre'),
+        responsable_bolsa_cargo:   get('cfg_responsable_cargo'),
+        responsable_bolsa_correo:  get('cfg_responsable_correo'),
+        docente_supervisor_nombre: get('cfg_docente_nombre'),
+        docente_supervisor_cargo:  get('cfg_docente_cargo'),
+        instituto_razon_social:    get('cfg_instituto_razon'),
+        instituto_ruc:             get('cfg_instituto_ruc'),
+        instituto_direccion:       get('cfg_instituto_direccion'),
+        instituto_representante_nombre: get('cfg_instituto_rep_nombre'),
+        instituto_representante_dni:    get('cfg_instituto_rep_dni')
+    };
+    try {
+        await apiFetch('/admin/configuracion', { method: 'PUT', body: JSON.stringify(body) });
+        toast('✓ Configuración guardada correctamente', 'success');
+    } catch(e) { toast(e.message, 'error'); }
+}
+
+// Init
+loadStats();
+scheduleAutoRefresh();
+</script>
+
+<style>
+/* ═══ DOCS PDF GRID ═══════════════════════════════════════ */
+.docs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px;
+}
+.doc-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-soft, #f8faff);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: box-shadow .15s, border-color .15s, background .15s;
+    text-align: left;
+}
+.doc-btn:hover { background: #eef4ff; border-color: var(--accent); box-shadow: 0 2px 8px rgba(29,111,232,0.1); }
+.doc-btn.doc-loading { opacity: .7; pointer-events: none; }
+.doc-btn.doc-done { border-color: var(--green); background: rgba(16,185,129,0.05); }
+.doc-icon { font-size: 1.2rem; flex-shrink: 0; }
+.doc-info { flex: 1; }
+.doc-info strong { display: block; font-size: .8rem; color: var(--navy-700, #071428); }
+.doc-info em { display: block; font-size: .71rem; color: var(--text-muted); font-style: normal; }
+.doc-dl { font-size: .9rem; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+/* ═══ CONTRATADO ROW ════════════════════════════════════== */
+.contratado-row {
+    background: white;
+    border: 1px solid rgba(16,185,129,0.2);
+    border-left: 4px solid var(--green);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    box-shadow: var(--shadow-xs);
+}
+.contratado-row .avatar {
+    background: var(--green);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+}
+</style>
+</body>
+</html>

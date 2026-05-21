@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Empresa — Bolsa LDV</title>
+  <link rel="stylesheet" href="/css/global.css">
+  <style>
+    /* ── OFFER ACCORDION ─────────────────────────── */
+    .offer-accordion {
+      margin-bottom: 12px; border-radius: var(--radius); overflow: hidden;
+      border: 1px solid var(--border); box-shadow: var(--shadow-xs);
+      background: white; transition: box-shadow .2s;
+    }
+    .offer-accordion:hover { box-shadow: var(--shadow-md); }
+
+    /* Closed offer visual treatment */
+    .offer-accordion.is-cerrada { border-left: 3px solid var(--text-muted); opacity: .85; }
+    .offer-accordion.is-cerrada:hover { opacity: 1; }
+
+    .offer-acc-header {
+      display: flex; align-items: center; gap: 14px; padding: 17px 20px;
+      cursor: pointer; transition: background .15s; user-select: none;
+      border-bottom: 2px solid transparent;
+    }
+    .offer-acc-header.open { border-bottom-color: var(--border); background: linear-gradient(135deg, #f7f9ff, #f0f5ff); }
+    .offer-acc-header:not(.open):hover { background: #f8faff; }
+
+    .offer-acc-info { flex: 1; min-width: 0; }
+    .offer-acc-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+    .offer-acc-sub { font-size: .77rem; color: var(--text-muted); margin-top: 3px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .offer-acc-stats { display: flex; gap: 16px; align-items: center; flex-shrink: 0; }
+    .acc-stat .n { font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; color: var(--accent); line-height: 1; }
+    .acc-stat .l { font-size: .64rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 700; margin-top: 1px; }
+    .acc-stat .n.green { color: var(--green); }
+    .acc-stat .n.amber { color: var(--amber); }
+    .acc-stat .n.gray  { color: var(--text-muted); }
+    .acc-stat.dev-alert { position: relative; padding-left: 36px; }
+    .dev-alert-icon {
+      position: absolute;
+      left: 0;
+      top: 2px;
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid rgba(239,68,68,0.5);
+      background: rgba(239,68,68,0.1);
+      color: #b91c1c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .8rem;
+      font-weight: 700;
+      box-shadow: 0 0 0 0 rgba(239,68,68,0.35);
+      animation: pulseDot 1.6s infinite;
+    }
+    .dev-alert-hint { font-size: .6rem; font-weight: 700; color: #b91c1c; letter-spacing: .04em; text-transform: uppercase; }
+
+    .acc-chevron {
+      width: 28px; height: 28px; border-radius: 8px; background: var(--bg);
+      border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+      font-size: .72rem; transition: all .22s; color: var(--text-muted); flex-shrink: 0;
+    }
+    .offer-acc-header.open .acc-chevron { transform: rotate(180deg); background: var(--accent-dim); border-color: rgba(29,111,232,0.25); color: var(--accent); }
+
+    .offer-acc-body { display: none; animation: slideDown .22s ease; }
+    .offer-acc-body.open { display: block; }
+
+    .offer-detail {
+      margin: 12px 20px 8px;
+      background: #f8faff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .offer-detail-title {
+      font-size: .72rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--text-muted); margin-bottom: 8px;
+    }
+    .offer-detail-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px; font-size: .82rem; color: var(--text-soft);
+    }
+    .offer-detail-grid strong { color: var(--text); font-weight: 700; }
+    .offer-detail-block {
+      margin-top: 10px; font-size: .84rem; color: var(--text-2);
+      line-height: 1.6; white-space: pre-wrap;
+    }
+
+    /* Applicant row */
+    .appl-row {
+      display: flex; align-items: flex-start; gap: 13px; padding: 14px 20px;
+      border-bottom: 1px solid rgba(29,111,232,0.05); transition: background .12s; position: relative;
+    }
+    .appl-row:last-child { border-bottom: none; }
+    .appl-row:hover { background: #f8faff; }
+
+    /* Preseleccionado = empresa lo eligió, esperando carta admin */
+    .appl-row.preseleccionado { background: rgba(245,158,11,0.04); }
+    .appl-row.preseleccionado::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px; background: var(--amber);
+    }
+
+    /* Contratado = proceso cerrado, carta emitida */
+    .appl-row.contratado { background: rgba(16,185,129,0.04); }
+    .appl-row.contratado::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px; background: var(--green);
+    }
+
+    .appl-row.rechazado { opacity: .45; }
+
+    .appl-body { flex: 1; min-width: 0; }
+    .appl-name { font-size: .9rem; font-weight: 700; color: var(--text); font-family: var(--font-display); }
+    .appl-meta { font-size: .75rem; color: var(--text-muted); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 10px; }
+    .appl-carta-text { margin-top: 8px; background: #f8faff; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: .8rem; color: var(--text-soft); font-style: italic; max-width: 520px; line-height: 1.55; }
+    .appl-actions { display: flex; gap: 5px; flex-wrap: wrap; flex-shrink: 0; align-items: flex-start; padding-top: 2px; }
+
+    .appl-empty { padding: 28px; text-align: center; color: var(--text-muted); font-size: .84rem; }
+
+    /* Tabs inside accordion */
+    .appl-tabs {
+      display: flex; gap: 3px; padding: 10px 20px 0; border-bottom: 1px solid var(--border); overflow-x: auto;
+    }
+    .appl-tab {
+      padding: 6px 13px; border-radius: 7px 7px 0 0; background: transparent; border: none;
+      color: var(--text-muted); font-size: .78rem; font-weight: 600;
+      transition: all .15s; cursor: pointer; white-space: nowrap;
+      font-family: var(--font-body); border-bottom: 2px solid transparent;
+    }
+    .appl-tab:hover { color: var(--accent); }
+    .appl-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--accent-dim); }
+
+    /* Action bar */
+    .offer-actions-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 20px 12px; background: #f8faff; flex-wrap: wrap;
+    }
+
+    /* Closed banner inside accordion */
+    .closed-banner {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 20px; background: rgba(100,116,139,0.06);
+      border-bottom: 1px solid var(--border); font-size: .84rem; color: var(--text-soft);
+    }
+
+    /* ── WELCOME HERO ────────────────────────────── */
+    .dash-welcome {
+      background: linear-gradient(135deg, var(--navy-900) 0%, #1a3670 100%);
+      border-radius: var(--radius-lg); padding: 24px 28px; margin-bottom: 24px;
+      display: flex; align-items: center; gap: 20px; position: relative;
+      overflow: hidden; flex-wrap: wrap; box-shadow: 0 8px 32px rgba(7,20,40,0.25);
+    }
+    .dash-welcome::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 80% 50%, rgba(29,111,232,0.25), transparent 60%);
+    }
+    .dash-welcome .wname { font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; color: white; letter-spacing: -0.03em; }
+    .dash-welcome .wsub  { font-size: .84rem; color: rgba(255,255,255,0.6); margin-top: 3px; }
+
+    /* Filters */
+    .filters-row {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; align-items: center;
+      background: rgba(29,111,232,0.04); border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px 12px; box-shadow: var(--shadow-xs);
+    }
+    .filter-input, .filter-select {
+      display: flex; align-items: center; gap: 10px;
+      background: white; border: 1.5px solid rgba(29,111,232,0.18); border-radius: 10px;
+      padding: 8px 12px; box-shadow: 0 6px 16px rgba(7,20,40,0.06);
+      transition: border-color .18s, box-shadow .18s;
+    }
+    .filter-input:focus-within, .filter-select:focus-within {
+      border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,111,232,0.12);
+    }
+    .filter-label {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--text-muted);
+    }
+    .filter-input .search-input-sm {
+      border: none; background: transparent; padding: 0; min-width: 220px;
+      font-size: .88rem; color: var(--text); outline: none;
+    }
+    .filter-input .search-input-sm::placeholder { color: #94a3b8; }
+    .filter-select { position: relative; }
+    .filter-select select {
+      border: none; background: transparent; padding: 0 18px 0 0;
+      font-size: .84rem; min-width: 170px; color: var(--text);
+      outline: none; appearance: none; font-family: var(--font-body);
+    }
+    .filter-select::after {
+      content: ''; position: absolute; right: 12px; width: 6px; height: 6px;
+      border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted);
+      transform: rotate(45deg); opacity: .6; pointer-events: none;
+    }
+    @media(max-width:720px) {
+      .filter-input, .filter-select { flex: 1 1 100%; }
+      .filter-input .search-input-sm, .filter-select select { min-width: 0; width: 100%; }
+    }
+
+    @media(max-width:640px) {
+      .offer-acc-stats { display: none; }
+      .offer-acc-header { gap: 10px; }
+    }
+
+    /* Alerts & stats */
+    .stat-mini.alert { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.05); box-shadow: 0 6px 18px rgba(239,68,68,0.12); }
+    .stat-mini[data-filter="devueltos"] .num { color: var(--red); }
+    .stat-mini[data-filter="devueltos"] .lab { color: #b91c1c; }
+    .stat-mini .stat-hint {
+      margin-top: 4px;
+      font-size: .65rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .stat-mini.alert .stat-hint { color: #b91c1c; }
+    .stat-mini.stat-filter { cursor: pointer; transition: transform .18s, box-shadow .18s, border-color .18s; }
+    .stat-mini.stat-filter.filter-active {
+      border-color: rgba(29,111,232,0.35);
+      background: linear-gradient(180deg, #ffffff 0%, #f3f7ff 100%);
+      box-shadow: 0 12px 28px rgba(7,20,40,0.14), 0 0 0 2px rgba(29,111,232,0.12);
+      transform: translateY(-3px) scale(1.01);
+    }
+    .stat-mini.stat-filter.filter-active[data-filter="postulantes"] {
+      border-color: rgba(29,111,232,0.45);
+      box-shadow: 0 12px 28px rgba(7,20,40,0.14), 0 0 0 2px rgba(29,111,232,0.18);
+    }
+    .stat-mini.stat-filter.filter-active[data-filter="activa"] {
+      border-color: rgba(16,185,129,0.45);
+      box-shadow: 0 12px 28px rgba(7,20,40,0.14), 0 0 0 2px rgba(16,185,129,0.18);
+    }
+    .stat-mini.stat-filter.filter-active[data-filter="preseleccion"] {
+      border-color: rgba(245,158,11,0.5);
+      box-shadow: 0 12px 28px rgba(7,20,40,0.14), 0 0 0 2px rgba(245,158,11,0.2);
+    }
+    .stat-mini.stat-filter.filter-active[data-filter="contratados"] {
+      border-color: rgba(16,185,129,0.45);
+      box-shadow: 0 12px 28px rgba(7,20,40,0.14), 0 0 0 2px rgba(16,185,129,0.18);
+    }
+    .stat-mini.stat-filter.filter-active[data-filter="devueltos"] {
+      border-color: rgba(239,68,68,0.5);
+      box-shadow: 0 12px 28px rgba(7,20,40,0.14), 0 0 0 2px rgba(239,68,68,0.2);
+    }
+    .stat-mini.stat-filter.filter-active::after {
+      content: '✓';
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 14px rgba(29,111,232,0.25);
+    }
+    .stat-mini.stat-filter { position: relative; }
+    .stat-mini.stat-filter.filter-active[data-filter="activa"]::after { background: var(--green); box-shadow: 0 6px 14px rgba(16,185,129,0.25); }
+    .stat-mini.stat-filter.filter-active[data-filter="preseleccion"]::after { background: var(--amber); box-shadow: 0 6px 14px rgba(245,158,11,0.25); }
+    .stat-mini.stat-filter.filter-active[data-filter="contratados"]::after { background: var(--green); box-shadow: 0 6px 14px rgba(16,185,129,0.25); }
+    .stat-mini.stat-filter.filter-active[data-filter="devueltos"]::after { background: var(--red); box-shadow: 0 6px 14px rgba(239,68,68,0.25); }
+    .stat-mini.stat-filter.filter-active .lab { color: var(--accent); }
+    .stat-mini.stat-filter.filter-active[data-filter="activa"] .lab { color: var(--green); }
+    .stat-mini.stat-filter.filter-active[data-filter="preseleccion"] .lab { color: var(--amber); }
+    .stat-mini.stat-filter.filter-active[data-filter="contratados"] .lab { color: var(--green); }
+    .stat-mini.stat-filter.filter-active[data-filter="devueltos"] .lab { color: var(--red); }
+    .stat-alert-head { display: flex; align-items: center; gap: 8px; }
+    .danger-icon {
+      width: 22px; height: 22px;
+      border-radius: 8px;
+      background: rgba(239,68,68,0.15);
+      color: #b91c1c;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem;
+      font-weight: 700;
+      opacity: .4;
+      transition: opacity .2s ease;
+    }
+    .danger-icon.active { opacity: 1; }
+    @keyframes pulseDot {
+      0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.55); }
+      70% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+      100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    }
+
+    /* ── PERFIL EMPRESA ─────────────────────────── */
+    .profile-hero {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      box-shadow: var(--shadow-sm);
+    }
+    .profile-hero h3 { margin: 0; font-size: 1.25rem; }
+    .profile-hero .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(16,185,129,0.1);
+      color: var(--green);
+    }
+    .profile-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+      font-size: .85rem;
+    }
+    .profile-meta-grid span { color: var(--text-muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: 4px; }
+    .profile-edit-grid {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 18px;
+    }
+    @media(max-width:960px) { .profile-edit-grid { grid-template-columns: 1fr; } }
+    .profile-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-xs); }
+    .profile-card h4 { margin: 0 0 12px; font-size: 1rem; }
+    .profile-field { margin-bottom: 12px; }
+    .profile-field label { display: block; font-size: .8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+    .profile-field input,
+    .profile-field textarea { width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; font-size: .85rem; font-family: inherit; }
+    .profile-field textarea { min-height: 80px; resize: vertical; }
+    .profile-field input:focus,
+    .profile-field textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(29,111,232,0.08); outline: none; }
+    .form-hint-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      font-size: .78rem;
+      color: var(--text-muted);
+    }
+    .form-hint-toggle input { margin: 0; }
+    .request-card h4 { margin-top: 0; }
+    .request-history { display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; }
+    .request-entry { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; background: #f9fbff; }
+    .request-entry header { display: flex; align-items: center; justify-content: space-between; font-size: .78rem; color: var(--text-muted); margin-bottom: 8px; gap: 10px; flex-wrap: wrap; }
+    .request-entry ul { margin: 0; padding-left: 16px; color: var(--text-soft); font-size: .82rem; }
+    .request-entry ul li strong { color: var(--text); }
+    .request-note { font-size: .78rem; color: var(--text-muted); margin-top: 6px; }
+    .request-response { font-size: .8rem; color: var(--green); margin-top: 6px; }
+    .pending-banner {
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: .85rem;
+      color: #92400e;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .day-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .day-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: #ffffff;
+      font-size: .8rem;
+      cursor: pointer;
+      transition: border-color .18s, box-shadow .18s, background .18s;
+      user-select: none;
+    }
+    .day-option input { margin: 0; }
+    .day-option.is-checked {
+      border-color: rgba(29,111,232,0.45);
+      box-shadow: 0 6px 16px rgba(29,111,232,0.12);
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .time-range {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .time-range .time-sep {
+      font-size: .8rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-brand">
+    <div class="navbar-logo">LV</div>
+    <div><div class="navbar-title">Bolsa de Trabajo <span>LDV</span></div></div>
+  </div>
+  <div class="navbar-links">
+    <span id="empresaNombreNav" style="color:var(--text-muted);font-size:.84rem;font-weight:600;"></span>
+    <span class="badge badge-blue" style="margin-left:4px;font-size:.68rem;">Empresa</span>
+    <button onclick="logout()" class="btn btn-outline btn-sm" style="margin-left:10px;">Salir</button>
+  </div>
+</nav>
+
+<div class="dashboard">
+  <div class="sidebar">
+    <div class="sidebar-user">
+      <div class="avatar" style="width:36px;height:36px;" id="sideAvatar">?</div>
+      <div>
+        <div class="name" id="sideNombre">—</div>
+        <div class="role">Empresa</div>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <button class="nav-item active" data-section="ofertas" onclick="showSection('ofertas')">
+        <span class="nav-icon">📋</span> Mis Ofertas
+      </button>
+      <button class="nav-item" data-section="nueva" onclick="openNuevaOferta()">
+        <span class="nav-icon">➕</span> Publicar Oferta
+      </button>
+      <button class="nav-item" data-section="perfil" onclick="showSection('perfil')">
+        <span class="nav-icon">🏢</span> Mi Perfil
+      </button>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    <!-- ═══ MIS OFERTAS ═══ -->
+    <div id="secOfertas" class="section-content">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Mis Ofertas</div>
+          <div class="section-subtitle">Gestiona publicaciones y revisa candidatos</div>
+        </div>
+        <button class="btn btn-primary" onclick="openNuevaOferta()">
+          <span>+</span> Nueva oferta
+        </button>
+      </div>
+
+      <!-- Mini stats -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px;" id="statsEmpresa">
+        <div class="stat-mini stat-filter" data-filter="activa" onclick="toggleStatFilter('activa')">
+          <div class="num" id="statOfertasActivas" style="color:var(--green);">—</div>
+          <div class="lab">Activas</div>
+        </div>
+        <div class="stat-mini stat-filter" data-filter="postulantes" onclick="toggleStatFilter('postulantes')">
+          <div class="num" id="statTotalPost">—</div>
+          <div class="lab">Postulantes</div>
+        </div>
+        <div class="stat-mini stat-filter" data-filter="preseleccion" onclick="toggleStatFilter('preseleccion')">
+          <div class="num" id="statPresel" style="color:var(--amber);">—</div>
+          <div class="lab">En preselección</div>
+        </div>
+        <div class="stat-mini stat-filter" data-filter="contratados" onclick="toggleStatFilter('contratados')">
+          <div class="num" id="statContratados" style="color:var(--green);">—</div>
+          <div class="lab">Contratados</div>
+        </div>
+        <div class="stat-mini stat-filter" id="statDevueltosCard" data-filter="devueltos" onclick="toggleStatFilter('devueltos')">
+          <div class="stat-alert-head">
+            <div class="danger-icon" id="statDevueltosIcon">!</div>
+            <div class="num" id="statDevueltos">—</div>
+          </div>
+          <div class="lab">Devueltos</div>
+          <div class="stat-hint" id="statDevueltosHint">Sin devoluciones</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-row">
+        <div class="filter-input">
+          <span class="filter-label">Buscar</span>
+          <input type="text" class="search-input-sm" id="searchOfertas"
+            placeholder="Oferta o carrera..." oninput="filterMisOfertas()">
+        </div>
+        <div class="filter-select">
+          <span class="filter-label">Estado</span>
+          <select id="filtroEstadoOfertas" onchange="filterMisOfertas()">
+          <option value="">Todos los estados</option>
+          <option value="activa">✅ Activas</option>
+          <option value="pausada">⏸ Pausadas</option>
+          <option value="cerrada">🔒 Cerradas</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="ofertasList"></div>
+      <div class="table-pagination" id="ofertasPager"></div>
+    </div>
+
+    <!-- ═══ NUEVA OFERTA ═══ -->
+    <div id="secNueva" class="section-content" style="display:none;">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Publicar Nueva Oferta</div>
+          <div class="section-subtitle">Define el puesto y el perfil requerido</div>
+        </div>
+        <button class="btn btn-ghost" onclick="cancelarEdicion()">← Volver</button>
+      </div>
+      <div class="card" style="max-width:800px;">
+        <div id="alertNueva" class="alert"></div>
+        <form id="formNuevaOferta">
+          <div class="form-group">
+            <label class="form-label">Título del puesto *</label>
+            <input type="text" class="form-control" name="titulo" required
+              placeholder="Ej: Desarrollador Web Junior, Practicante de Contabilidad...">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tipo de oferta *</label>
+              <select class="form-control" name="tipo_oferta" required>
+                <option value="">Seleccionar tipo</option>
+                <option value="practicas">🎓 Prácticas profesionales</option>
+                <option value="trabajo">💼 Trabajo / Empleo</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Dirigido a *</label>
+              <select class="form-control" name="dirigido_a" required>
+                <option value="">Seleccionar perfil</option>
+                <option value="practicante">🔧 Practicantes</option>
+                <option value="egresado">🎓 Egresados</option>
+                <option value="titulado">🏆 Titulados</option>
+                <option value="todos">👥 Todos los perfiles</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Modalidad</label>
+              <select class="form-control" name="modalidad">
+                <option value="presencial">🏢 Presencial</option>
+                <option value="remoto">🌐 Remoto</option>
+                <option value="hibrido">🔀 Híbrido</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">N° de vacantes</label>
+              <input type="number" class="form-control" name="vacantes" value="1" min="1" max="50">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Horario</label>
+              <div class="time-range">
+                <input type="time" class="form-control" id="horarioInicio" required>
+                <span class="time-sep">a</span>
+                <input type="time" class="form-control" id="horarioFin" required>
+              </div>
+              <div class="profile-field" style="margin-top:12px;">
+                <label class="form-label" id="labelDiasPlan">Días de la pasantía *</label>
+                <div class="day-picker" id="diasPicker">
+                  <label class="day-option"><input type="checkbox" data-day="lunes">Lun</label>
+                  <label class="day-option"><input type="checkbox" data-day="martes">Mar</label>
+                  <label class="day-option"><input type="checkbox" data-day="miercoles">Mie</label>
+                  <label class="day-option"><input type="checkbox" data-day="jueves">Jue</label>
+                  <label class="day-option"><input type="checkbox" data-day="viernes">Vie</label>
+                  <label class="day-option"><input type="checkbox" data-day="sabado">Sab</label>
+                  <label class="day-option"><input type="checkbox" data-day="domingo">Dom</label>
+                </div>
+                <input type="hidden" name="horario_dias">
+                <div class="form-hint">Selecciona los dias en los que se realizara la pasantia.</div>
+              </div>
+
+              <input type="text" class="form-control" id="horarioDisplay" name="horario_display" placeholder="Horario generado automaticamente" readonly>
+              <input type="hidden" name="horario">
+              <div class="form-hint">Se genera con los dias seleccionados y el rango horario.</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Rango salarial / Compensación</label>
+              <input type="text" class="form-control" name="salario_rango" placeholder="S/ 1,200 – S/ 1,800">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Carrera(s) afín(es)</label>
+            <select class="form-control" name="carrera_afin">
+              <option value="">— Todas las carreras —</option>
+              <option value="Administración de Empresas">💼 Administración de Empresas</option>
+              <option value="Contabilidad">📊 Contabilidad</option>
+              <option value="Computación e Informática">💻 Computación e Informática</option>
+              <option value="Administración de Empresas, Contabilidad">💼📊 Administración de Empresas y Contabilidad</option>
+              <option value="Administración de Empresas, Computación e Informática">💼💻 Administración de Empresas y Computación</option>
+              <option value="Contabilidad, Computación e Informática">📊💻 Contabilidad y Computación e Informática</option>
+              <option value="Administración de Empresas, Contabilidad, Computación e Informática">🎓 Todas las carreras</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descripción del puesto *</label>
+            <textarea class="form-control" name="descripcion" required rows="4"
+              placeholder="Responsabilidades, funciones y el rol del candidato..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Requisitos</label>
+            <textarea class="form-control" name="requisitos" rows="3"
+              placeholder="Conocimientos, herramientas, experiencia..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Beneficios</label>
+            <textarea class="form-control" name="beneficios" rows="2"
+              placeholder="Seguro médico, capacitaciones, línea de carrera..."></textarea>
+          </div>
+
+          <div id="planSectionBlock">
+            <div class="field-section">
+              <div class="field-section-icon">📝</div>
+              <span class="field-section-label" id="planSectionLabel">Plan de la pasantía (EFSRT)</span>
+              <div class="field-section-line"></div>
+            </div>
+            <div class="form-group" data-plan-field>
+              <label class="form-label" id="labelAreaPractica">Área o departamento donde realizará la pasantía *</label>
+              <input type="text" class="form-control" name="area_practica" required
+                placeholder="Ej: Contabilidad, Soporte TI, Marketing Digital">
+            </div>
+            <div class="form-group" data-plan-field>
+              <label class="form-label" id="labelActividades">Actividades formativas / Plan específico *</label>
+              <textarea class="form-control" name="actividades" rows="4" required
+                placeholder="Detalle de tareas, objetivos y responsabilidades del practicante"></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group" data-plan-hours>
+                <label class="form-label" id="labelHorasPlan">Horas totales del plan *</label>
+                <input type="number" class="form-control" name="horas_practicas" required min="80" max="960" value="128">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group" data-plan-field>
+                <label class="form-label" id="labelFechaInicio">Fecha de inicio planificada *</label>
+                <input type="date" class="form-control" name="fecha_inicio" required>
+              </div>
+              <div class="form-group" id="fechaFinGroup" data-plan-field>
+                <label class="form-label" for="fechaFinInput">
+                  <span id="labelFechaFinText">Fecha de fin planificada</span>
+                  <span id="fechaFinHint" style="font-weight:400;font-size:.75rem;color:var(--text-muted);">(opcional para trabajos)</span>
+                </label>
+                <input type="date" class="form-control" name="fecha_fin" id="fechaFinInput">
+                <label class="form-hint-toggle" id="fechaFinIndefWrapper" hidden>
+                  <input type="checkbox" id="fechaFinIndefinida">
+                  <span>Sin fecha fin (vigencia indefinida)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Fecha límite de postulación</label>
+              <input type="date" class="form-control" name="fecha_limite">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Estado inicial</label>
+              <select class="form-control" name="estado">
+                <option value="activa">✅ Activa — publicar ahora</option>
+                <option value="pausada">⏸ Pausada — guardar borrador</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:6px;">
+            <button type="submit" class="btn btn-primary" id="btnPublicar">
+              <span>🚀</span> Publicar oferta
+            </button>
+            <button type="button" class="btn btn-ghost" onclick="cancelarEdicion()">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ═══ MI PERFIL ═══ -->
+    <div id="secPerfil" class="section-content" style="display:none;">
+      <div class="section-header">
+        <div><div class="section-title">Mi Perfil de Empresa</div></div>
+      </div>
+      <div id="perfilData">
+        <div class="card"><div class="empty-state"><h3>Cargando...</h3></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/global.js"></script>
+<script>
+if (!Auth.requireAuth('empresa')) {}
+const user = Auth.getUser();
+document.getElementById('empresaNombreNav').textContent = user?.nombre || '';
+document.getElementById('sideNombre').textContent = user?.nombre || '—';
+document.getElementById('sideAvatar').textContent  = initials(user?.nombre || 'E');
+
+const offerForm = document.getElementById('formNuevaOferta');
+const fechaLimiteInput = offerForm ? offerForm.querySelector('input[name="fecha_limite"]') : null;
+const fechaInicioInput = offerForm ? offerForm.querySelector('input[name="fecha_inicio"]') : null;
+const fechaFinInput = offerForm ? offerForm.querySelector('input[name="fecha_fin"]') : null;
+const horarioInicioInput = document.getElementById('horarioInicio');
+const horarioFinInput = document.getElementById('horarioFin');
+const horarioDisplayInput = document.getElementById('horarioDisplay');
+const horarioHiddenInput = offerForm ? offerForm.elements['horario'] : null;
+const horarioDiasHiddenInput = offerForm ? offerForm.elements['horario_dias'] : null;
+const diasPicker = document.getElementById('diasPicker');
+const dayCheckboxes = diasPicker ? Array.from(diasPicker.querySelectorAll('input[data-day]')) : [];
+const tipoOfertaSelect = offerForm ? offerForm.querySelector('select[name="tipo_oferta"]') : null;
+const dirigidoSelect = offerForm ? offerForm.querySelector('select[name="dirigido_a"]') : null;
+const fechaFinIndefCheckbox = document.getElementById('fechaFinIndefinida');
+const fechaFinIndefWrapper = document.getElementById('fechaFinIndefWrapper');
+const planSectionLabel = document.getElementById('planSectionLabel');
+const labelAreaPractica = document.getElementById('labelAreaPractica');
+const labelActividades = document.getElementById('labelActividades');
+const labelHorasPlan = document.getElementById('labelHorasPlan');
+const labelDiasPlan = document.getElementById('labelDiasPlan');
+const labelFechaInicio = document.getElementById('labelFechaInicio');
+const labelFechaFinText = document.getElementById('labelFechaFinText');
+const fechaFinHint = document.getElementById('fechaFinHint');
+const horasFieldGroup = offerForm ? offerForm.querySelector('[data-plan-hours]') : null;
+const horasPlanInput = offerForm ? offerForm.elements['horas_practicas'] : null;
+let editingOfferId = null;
+let empresaPerfil = null;
+let empresaSolicitudes = [];
+const EMP_PERFIL_DRAFT_KEY = `ldv_emp_profile_draft_${user?.id || 'anon'}`;
+const OFFER_FORM_COPY = {
+  create: {
+    title: 'Publicar Nueva Oferta',
+    subtitle: 'Define el puesto y el perfil requerido',
+    button: '<span>🚀</span> Publicar oferta'
+  },
+  edit: {
+    title: 'Editar oferta',
+    subtitle: 'Actualiza la información de tu publicación',
+    button: '<span>💾</span> Guardar cambios'
+  }
+};
+
+function readDraft(key) {
+  try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; }
+}
+
+function writeDraft(key, data) {
+  localStorage.setItem(key, JSON.stringify(data || {}));
+}
+
+function clearDraft(key) {
+  localStorage.removeItem(key);
+}
+
+function getFormValues(form) {
+  const data = {};
+  Array.from(form.elements || []).forEach(el => {
+    if (!el.name) return;
+    if (el.type === 'checkbox') {
+      data[el.name] = el.checked;
+    } else if (el.type === 'radio') {
+      if (el.checked) data[el.name] = el.value;
+    } else {
+      data[el.name] = el.value;
+    }
+  });
+  return data;
+}
+
+function applyFormValues(form, values) {
+  if (!values || typeof values !== 'object') return;
+  Object.entries(values).forEach(([name, value]) => {
+    const el = form.elements[name];
+    if (!el) return;
+    if (el.type === 'checkbox') {
+      el.checked = Boolean(value);
+    } else if (el.type === 'radio') {
+      const radio = form.querySelector(`input[name="${name}"][value="${String(value)}"]`);
+      if (radio) radio.checked = true;
+    } else {
+      el.value = value;
+    }
+  });
+}
+
+function bindDraftHandlers(form, key) {
+  const handler = () => writeDraft(key, getFormValues(form));
+  form.addEventListener('input', handler);
+  form.addEventListener('change', handler);
+  return handler;
+}
+
+const PLAN_FIELD_COPY = {
+  practicas: {
+    section: 'Plan de la pasantía (EFSRT)',
+    area: 'Área o departamento donde realizará la pasantía *',
+    actividades: 'Actividades formativas / Plan específico *',
+    horas: 'Horas totales del plan *',
+    dias: 'Días de la pasantía *',
+    inicio: 'Fecha de inicio planificada *',
+    fin: 'Fecha de fin planificada',
+    finHint: '(obligatoria para prácticas)'
+  },
+  empleo: {
+    section: 'Detalles del puesto / rol',
+    area: 'Área o departamento del puesto *',
+    actividades: 'Responsabilidades principales *',
+    horas: 'Carga horaria (opcional)',
+    dias: 'Días laborales *',
+    inicio: 'Fecha de incorporación estimada *',
+    fin: 'Fecha de fin del contrato (si aplica)',
+    finHint: '(opcional para empleos)'
+  }
+};
+
+const DAY_ORDER = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'];
+const DAY_LABELS = {
+  lunes: 'Lunes',
+  martes: 'Martes',
+  miercoles: 'Miercoles',
+  jueves: 'Jueves',
+  viernes: 'Viernes',
+  sabado: 'Sabado',
+  domingo: 'Domingo'
+};
+const DAY_SHORT = {
+  lunes: 'Lun',
+  martes: 'Mar',
+  miercoles: 'Mie',
+  jueves: 'Jue',
+  viernes: 'Vie',
+  sabado: 'Sab',
+  domingo: 'Dom'
+};
+
+function normalizeToken(value = '') {
+  try {
+    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  } catch {
+    return value.toLowerCase();
+  }
+}
+
+function getSelectedDayKeys() {
+  return dayCheckboxes
+    .filter(cb => cb.checked)
+    .map(cb => cb.dataset.day)
+    .filter(Boolean);
+}
+
+function updateDayStyles() {
+  dayCheckboxes.forEach(cb => {
+    const label = cb.closest('.day-option');
+    if (label) label.classList.toggle('is-checked', cb.checked);
+  });
+}
+
+function parseDaysFromText(text = '') {
+  const norm = normalizeToken(text);
+  if (!norm) return [];
+  const hits = DAY_ORDER.filter(day => norm.includes(day) || norm.includes(DAY_SHORT[day].toLowerCase()));
+  if (norm.includes(' a ') && hits.length >= 2) {
+    const startIdx = DAY_ORDER.indexOf(hits[0]);
+    const endIdx = DAY_ORDER.indexOf(hits[hits.length - 1]);
+    if (startIdx >= 0 && endIdx >= startIdx) {
+      return DAY_ORDER.slice(startIdx, endIdx + 1);
+    }
+  }
+  return hits;
+}
+
+function parseTimeRange(text = '') {
+  const match = text.match(/(\d{1,2}:\d{2})\s*(?:-|–|a)\s*(\d{1,2}:\d{2})/i);
+  if (!match) return null;
+  const pad = (val) => {
+    const [h, m] = val.split(':');
+    return `${String(h).padStart(2, '0')}:${m}`;
+  };
+  return { start: pad(match[1]), end: pad(match[2]) };
+}
+
+function updateHorarioFields(options = {}) {
+  const preserveExisting = options.preserveExisting === true;
+  const selected = getSelectedDayKeys();
+  const daysLabel = selected.map(day => DAY_SHORT[day]).join(', ');
+  const daysFull = selected.map(day => DAY_LABELS[day]).join(', ');
+  const start = horarioInicioInput?.value || '';
+  const end = horarioFinInput?.value || '';
+
+  if (horarioDiasHiddenInput) horarioDiasHiddenInput.value = daysFull;
+
+  let horarioText = '';
+  if (daysLabel && start && end) {
+    horarioText = `${daysLabel}, ${start}-${end}`;
+  } else if (daysLabel) {
+    horarioText = daysLabel;
+  } else if (preserveExisting && horarioHiddenInput?.value) {
+    horarioText = horarioHiddenInput.value;
+  }
+
+  if (horarioHiddenInput) horarioHiddenInput.value = horarioText;
+  if (horarioDisplayInput) horarioDisplayInput.value = horarioText;
+  updateDayStyles();
+}
+
+function setSelectedDays(dayKeys = []) {
+  const selected = new Set(dayKeys);
+  dayCheckboxes.forEach(cb => {
+    cb.checked = selected.has(cb.dataset.day);
+  });
+  updateDayStyles();
+}
+
+setOfferFormMode('create');
+setFechaLimiteMin();
+handleTipoOfertaChange();
+updateHorarioFields({ preserveExisting: true });
+
+let misOfertasData = [];
+let currentStatFilter = null;
+const AUTO_REFRESH_MS = 15000;
+const AUTO_REFRESHABLE_SECTIONS = new Set(['ofertas','perfil']);
+let currentSection = 'ofertas';
+let autoRefreshTimer = null;
+let openAccordionId = null;
+let openAccordionFilter = 'todos';
+const PAGE_SIZE = 10;
+const APPL_PAGE_SIZE = 10;
+let offersPage = 1;
+let currentOffersView = [];
+const APPL_PAGES = {};
+const postulantesCache = {};
+
+function clampPage(page, totalPages) {
+  return Math.min(Math.max(1, page), totalPages);
+}
+
+function paginateData(data, page, size) {
+  const totalItems = data.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / size));
+  const safePage = clampPage(page, totalPages);
+  const start = (safePage - 1) * size;
+  return { items: data.slice(start, start + size), page: safePage, totalPages, totalItems };
+}
+
+function getPagerPages(current, total) {
+  const pages = [];
+  for (let p = 1; p <= total; p += 1) {
+    if (p === 1 || p === total || Math.abs(p - current) <= 1) pages.push(p);
+  }
+  return pages;
+}
+
+function renderOffersPager(totalItems, page, totalPages) {
+  const container = document.getElementById('ofertasPager');
+  if (!container) return;
+  if (totalItems <= PAGE_SIZE) {
+    container.innerHTML = '';
+    return;
+  }
+  const pages = getPagerPages(page, totalPages);
+  let html = '<div class="pager-group">';
+  html += `<button class="pager-btn" ${page <= 1 ? 'disabled' : ''} onclick="setOffersPage(${page - 1})">Anterior</button>`;
+  let last = 0;
+  pages.forEach(p => {
+    if (p - last > 1) html += '<span class="pager-ellipsis">...</span>';
+    html += `<button class="pager-btn ${p === page ? 'active' : ''}" onclick="setOffersPage(${p})">${p}</button>`;
+    last = p;
+  });
+  html += `<button class="pager-btn" ${page >= totalPages ? 'disabled' : ''} onclick="setOffersPage(${page + 1})">Siguiente</button>`;
+  html += '</div>';
+  html += `<div class="pager-group">
+    <span class="pager-meta">Pagina ${page} de ${totalPages}</span>
+    <input class="pager-input" type="number" min="1" max="${totalPages}" id="pagerJump-ofertas" value="${page}">
+    <button class="pager-btn" onclick="jumpOffersPage()">Ir</button>
+  </div>`;
+  container.innerHTML = html;
+}
+
+function setOffersPage(page) {
+  offersPage = page;
+  renderOfertas(currentOffersView);
+}
+
+function jumpOffersPage() {
+  const input = document.getElementById('pagerJump-ofertas');
+  if (!input) return;
+  const value = parseInt(input.value, 10);
+  if (Number.isNaN(value)) return;
+  setOffersPage(value);
+}
+
+function getApplicantPageKey(ofertaId, filtro) {
+  return `${ofertaId}:${filtro}`;
+}
+
+function paginateApplicants(list, ofertaId, filtro) {
+  const key = getApplicantPageKey(ofertaId, filtro);
+  const pageData = paginateData(list, APPL_PAGES[key] || 1, APPL_PAGE_SIZE);
+  APPL_PAGES[key] = pageData.page;
+  return pageData;
+}
+
+function renderApplicantPager(ofertaId, filtro, totalItems, page, totalPages) {
+  if (totalItems <= APPL_PAGE_SIZE) return '';
+  const pages = getPagerPages(page, totalPages);
+  const jumpId = `pagerJump-appl-${ofertaId}-${filtro}`;
+  let html = '<div class="table-pagination">';
+  html += '<div class="pager-group">';
+  html += `<button class="pager-btn" ${page <= 1 ? 'disabled' : ''} onclick="setApplicantPage(${ofertaId},'${filtro}',${page - 1})">Anterior</button>`;
+  let last = 0;
+  pages.forEach(p => {
+    if (p - last > 1) html += '<span class="pager-ellipsis">...</span>';
+    html += `<button class="pager-btn ${p === page ? 'active' : ''}" onclick="setApplicantPage(${ofertaId},'${filtro}',${p})">${p}</button>`;
+    last = p;
+  });
+  html += `<button class="pager-btn" ${page >= totalPages ? 'disabled' : ''} onclick="setApplicantPage(${ofertaId},'${filtro}',${page + 1})">Siguiente</button>`;
+  html += '</div>';
+  html += `<div class="pager-group">
+    <span class="pager-meta">Pagina ${page} de ${totalPages}</span>
+    <input class="pager-input" type="number" min="1" max="${totalPages}" id="${jumpId}" value="${page}">
+    <button class="pager-btn" onclick="jumpApplicantPage(${ofertaId},'${filtro}')">Ir</button>
+  </div>`;
+  html += '</div>';
+  return html;
+}
+
+function setApplicantPage(ofertaId, filtro, page) {
+  const key = getApplicantPageKey(ofertaId, filtro);
+  APPL_PAGES[key] = page;
+  renderAccordionBody(ofertaId, postulantesCache[ofertaId] || [], filtro);
+}
+
+function jumpApplicantPage(ofertaId, filtro) {
+  const jumpId = `pagerJump-appl-${ofertaId}-${filtro}`;
+  const input = document.getElementById(jumpId);
+  if (!input) return;
+  const value = parseInt(input.value, 10);
+  if (Number.isNaN(value)) return;
+  setApplicantPage(ofertaId, filtro, value);
+}
+
+function refreshCurrentSection() {
+  if (document.hidden) return;
+  if (currentSection === 'ofertas') {
+    loadOfertas(false);
+  } else if (currentSection === 'perfil') {
+    loadPerfil();
+  }
+}
+
+function scheduleAutoRefresh() {
+  clearInterval(autoRefreshTimer);
+  if (!AUTO_REFRESHABLE_SECTIONS.has(currentSection)) return;
+  autoRefreshTimer = setInterval(refreshCurrentSection, AUTO_REFRESH_MS);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) refreshCurrentSection();
+});
+
+function updateDevueltosCounter(total) {
+  const devNum = document.getElementById('statDevueltos');
+  const devCard = document.getElementById('statDevueltosCard');
+  const devHint = document.getElementById('statDevueltosHint');
+  const devIcon = document.getElementById('statDevueltosIcon');
+  if (!devNum || !devCard) return;
+  const numericTotal = Number(total);
+  const safeTotal = Number.isFinite(numericTotal) ? numericTotal : 0;
+  devNum.textContent = safeTotal;
+  devCard.classList.toggle('alert', safeTotal > 0);
+  if (devHint) devHint.textContent = safeTotal > 0 ? 'Revisa notas del admin' : 'Sin devoluciones';
+  if (devIcon) devIcon.classList.toggle('active', safeTotal > 0);
+}
+
+function showSection(id) {
+  document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const sec = document.getElementById('sec' + id[0].toUpperCase() + id.slice(1));
+  if (sec) sec.style.display = 'block';
+  const navBtn = document.querySelector(`.nav-item[data-section="${id}"]`);
+  if (navBtn) navBtn.classList.add('active');
+  currentSection = id;
+  if (id === 'ofertas') {
+    loadOfertas();
+  } else if (id === 'perfil') {
+    loadPerfil();
+  }
+  scheduleAutoRefresh();
+}
+
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+function todayLocalISO() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function setFechaLimiteMin() {
+  const today = todayLocalISO();
+  if (fechaLimiteInput) fechaLimiteInput.min = today;
+  if (fechaInicioInput) fechaInicioInput.min = today;
+  updateFechaPlanBounds();
+}
+
+function updateFechaPlanBounds() {
+  if (!fechaFinInput || fechaFinInput.disabled) return;
+  const today = todayLocalISO();
+  const startVal = fechaInicioInput?.value || today;
+  if (fechaFinInput) {
+    fechaFinInput.min = startVal;
+    if (fechaFinInput.value && fechaFinInput.value < startVal) {
+      fechaFinInput.value = startVal;
+    }
+  }
+  if (fechaInicioInput && (!fechaInicioInput.min || fechaInicioInput.min !== today)) {
+    fechaInicioInput.min = today;
+  }
+}
+
+function isOfertaTrabajo() {
+  return (tipoOfertaSelect?.value || '') === 'trabajo';
+}
+
+function isPracticasContext() {
+  const dirigido = dirigidoSelect?.value || '';
+  if (dirigido === 'egresado' || dirigido === 'titulado') return false;
+  if (isOfertaTrabajo() && dirigido !== 'practicante') return false;
+  return true;
+}
+
+function canUseFechaFinIndefinida() {
+  return isOfertaTrabajo() && !isPracticasContext();
+}
+
+function applyPlanFieldMode() {
+  const isPracticas = isPracticasContext();
+  const copy = isPracticas ? PLAN_FIELD_COPY.practicas : PLAN_FIELD_COPY.empleo;
+  if (planSectionLabel) planSectionLabel.textContent = copy.section;
+  if (labelAreaPractica) labelAreaPractica.textContent = copy.area;
+  if (labelActividades) labelActividades.textContent = copy.actividades;
+  if (labelHorasPlan) labelHorasPlan.textContent = copy.horas;
+  if (labelDiasPlan) labelDiasPlan.textContent = copy.dias;
+  if (labelFechaInicio) labelFechaInicio.textContent = copy.inicio;
+  if (labelFechaFinText) labelFechaFinText.textContent = copy.fin;
+  if (fechaFinHint) fechaFinHint.textContent = copy.finHint;
+  if (horasFieldGroup) horasFieldGroup.style.display = isPracticas ? '' : 'none';
+  if (horasPlanInput) {
+    horasPlanInput.required = isPracticas;
+    if (!isPracticas) {
+      horasPlanInput.value = '';
+    } else if (!horasPlanInput.value) {
+      horasPlanInput.value = '128';
+    }
+  }
+}
+
+function handleFechaFinIndefinidaChange() {
+  if (!fechaFinInput) return;
+  const canIndef = canUseFechaFinIndefinida();
+  if (!canIndef && fechaFinIndefCheckbox) fechaFinIndefCheckbox.checked = false;
+  const indef = canIndef && !!fechaFinIndefCheckbox?.checked;
+  fechaFinInput.disabled = indef;
+  fechaFinInput.required = !isOfertaTrabajo() || isPracticasContext();
+  if (indef) {
+    fechaFinInput.value = '';
+  } else {
+    updateFechaPlanBounds();
+  }
+}
+
+function handleTipoOfertaChange() {
+  const canIndef = canUseFechaFinIndefinida();
+  if (fechaFinIndefWrapper) fechaFinIndefWrapper.hidden = !canIndef;
+  if (!canIndef && fechaFinIndefCheckbox) fechaFinIndefCheckbox.checked = false;
+  if (dirigidoSelect) {
+    if (!isOfertaTrabajo()) {
+      dirigidoSelect.value = 'practicante';
+      dirigidoSelect.disabled = true;
+    } else {
+      dirigidoSelect.disabled = false;
+    }
+  }
+  handleFechaFinIndefinidaChange();
+  applyPlanFieldMode();
+}
+
+function handleDirigidoChange() {
+  applyPlanFieldMode();
+  handleTipoOfertaChange();
+}
+
+if (fechaInicioInput) {
+  fechaInicioInput.addEventListener('change', updateFechaPlanBounds);
+}
+if (tipoOfertaSelect) {
+  tipoOfertaSelect.addEventListener('change', handleTipoOfertaChange);
+}
+if (dirigidoSelect) {
+  dirigidoSelect.addEventListener('change', handleDirigidoChange);
+}
+if (fechaFinIndefCheckbox) {
+  fechaFinIndefCheckbox.addEventListener('change', handleFechaFinIndefinidaChange);
+}
+if (dayCheckboxes.length) {
+  dayCheckboxes.forEach(cb => cb.addEventListener('change', () => updateHorarioFields()));
+}
+if (horarioInicioInput) {
+  horarioInicioInput.addEventListener('change', () => updateHorarioFields());
+}
+if (horarioFinInput) {
+  horarioFinInput.addEventListener('change', () => updateHorarioFields());
+}
+
+function setOfferFormMode(mode = 'create') {
+  const cfg = OFFER_FORM_COPY[mode] || OFFER_FORM_COPY.create;
+  const titleEl = document.querySelector('#secNueva .section-title');
+  const subtitleEl = document.querySelector('#secNueva .section-subtitle');
+  const btn = document.getElementById('btnPublicar');
+  if (titleEl) titleEl.textContent = cfg.title;
+  if (subtitleEl) subtitleEl.textContent = cfg.subtitle;
+  if (btn) btn.innerHTML = cfg.button;
+}
+
+function cancelarEdicion(redirect = true) {
+  if (offerForm) offerForm.reset();
+  if (fechaFinIndefCheckbox) fechaFinIndefCheckbox.checked = false;
+  if (horarioInicioInput) horarioInicioInput.value = '';
+  if (horarioFinInput) horarioFinInput.value = '';
+  if (horarioHiddenInput) horarioHiddenInput.value = '';
+  if (horarioDiasHiddenInput) horarioDiasHiddenInput.value = '';
+  if (horarioDisplayInput) horarioDisplayInput.value = '';
+  setSelectedDays([]);
+  editingOfferId = null;
+  setOfferFormMode('create');
+  setFechaLimiteMin();
+  handleTipoOfertaChange();
+  if (redirect) showSection('ofertas');
+}
+
+function openNuevaOferta() {
+  cancelarEdicion(false);
+  showSection('nueva');
+}
+
+function getDateOnly(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value.slice(0, 10);
+  try { return new Date(value).toISOString().slice(0, 10); } catch { return ''; }
+}
+
+function fillOfferForm(oferta) {
+  if (!offerForm || !oferta) return;
+  const setValue = (name, value) => {
+    if (offerForm.elements[name] !== undefined) offerForm.elements[name].value = value ?? '';
+  };
+  setValue('titulo', oferta.titulo || '');
+  setValue('tipo_oferta', oferta.tipo_oferta || '');
+  setValue('dirigido_a', oferta.dirigido_a || '');
+  setValue('modalidad', oferta.modalidad || 'presencial');
+  setValue('vacantes', oferta.vacantes || 1);
+  setValue('horario', oferta.horario || '');
+  setValue('salario_rango', oferta.salario_rango || '');
+  setValue('carrera_afin', oferta.carrera_afin || '');
+  setValue('descripcion', oferta.descripcion || '');
+  setValue('requisitos', oferta.requisitos || '');
+  setValue('beneficios', oferta.beneficios || '');
+  setValue('horario', oferta.horario || '');
+  setValue('area_practica', oferta.area_practica || '');
+  setValue('actividades', oferta.actividades || '');
+  setValue('horas_practicas', oferta.horas_practicas ?? '');
+  setValue('horario_dias', oferta.horario_dias || '');
+  setValue('fecha_inicio', getDateOnly(oferta.fecha_inicio));
+  setValue('fecha_fin', getDateOnly(oferta.fecha_fin));
+  setValue('fecha_limite', getDateOnly(oferta.fecha_limite));
+  setValue('estado', oferta.estado === 'pausada' ? 'pausada' : 'activa');
+  if (horarioDisplayInput) horarioDisplayInput.value = oferta.horario || '';
+  if (horarioDiasHiddenInput) horarioDiasHiddenInput.value = oferta.horario_dias || '';
+
+  const dayKeys = parseDaysFromText(oferta.horario_dias || '');
+  setSelectedDays(dayKeys);
+  const timeRange = parseTimeRange(oferta.horario || '');
+  if (timeRange && horarioInicioInput && horarioFinInput) {
+    horarioInicioInput.value = timeRange.start;
+    horarioFinInput.value = timeRange.end;
+  }
+  updateHorarioFields({ preserveExisting: true });
+  if (fechaFinIndefCheckbox) {
+    fechaFinIndefCheckbox.checked = oferta.tipo_oferta === 'trabajo' && !oferta.fecha_fin;
+  }
+  handleTipoOfertaChange();
+  updateFechaPlanBounds();
+}
+
+function editarOferta(ofertaId) {
+  const oferta = misOfertasData.find(o => o.id === ofertaId);
+  if (!oferta) {
+    toast('No pudimos cargar la oferta seleccionada.', 'error');
+    return;
+  }
+  if (oferta.estado === 'cerrada') {
+    toast('Las ofertas cerradas no pueden editarse.', 'warning');
+    return;
+  }
+  editingOfferId = ofertaId;
+  fillOfferForm(oferta);
+  setOfferFormMode('edit');
+  showSection('nueva');
+}
+
+function validateOfferPayload(payload) {
+  if (!payload) return null;
+  const isTrabajo = payload.tipo_oferta === 'trabajo';
+  if (payload.fecha_limite) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.fecha_limite))
+      return 'Formato de fecha límite inválido. Usa AAAA-MM-DD.';
+    if (payload.fecha_limite <= todayLocalISO())
+      return 'La fecha límite debe ser posterior a la fecha actual.';
+  }
+  if (!payload.area_practica || !payload.horario_dias || !payload.fecha_inicio)
+    return 'Completa el área, días y la fecha de inicio planificada.';
+  if (!payload.horario)
+    return 'Selecciona los días y el rango horario.';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.fecha_inicio))
+    return 'La fecha de inicio debe tener el formato AAAA-MM-DD.';
+  if (!isTrabajo && !payload.fecha_fin)
+    return 'Incluye la fecha de fin planificada del plan formativo.';
+  if (payload.fecha_fin) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.fecha_fin))
+      return 'La fecha de fin debe tener el formato AAAA-MM-DD.';
+    if (payload.fecha_fin < payload.fecha_inicio)
+      return 'La fecha de fin debe ser posterior a la fecha de inicio.';
+  }
+  if (!payload.actividades)
+    return 'Describe las actividades formativas del practicante.';
+  if (payload.horas_practicas && payload.horas_practicas < 80)
+    return 'El plan debe considerar al menos 80 horas de práctica.';
+  return null;
+}
+
+// ════════════════════════════════════════════════════════
+// LOAD & RENDER OFFERS
+// ════════════════════════════════════════════════════════
+async function loadOfertas(resetPage = true) {
+  try {
+    const prevOpenId = openAccordionId;
+    const prevFilter = openAccordionFilter;
+    misOfertasData = await apiFetch('/ofertas/empresa/mias');
+
+    const activas  = misOfertasData.filter(o => o.estado === 'activa').length;
+    const totalPost = misOfertasData.reduce((s, o) => s + (o.total_postulantes||0), 0);
+    const totalPresel = misOfertasData.reduce((s, o) => s + (o.total_preseleccionados||0), 0);
+    const totalCont   = misOfertasData.reduce((s, o) => s + (o.total_contratados||0), 0);
+    const totalDevueltos = misOfertasData.reduce((s, o) => s + Number(o.total_devueltos || 0), 0);
+
+    document.getElementById('statOfertasActivas').textContent = activas;
+    document.getElementById('statTotalPost').textContent      = totalPost;
+    document.getElementById('statPresel').textContent         = totalPresel;
+    document.getElementById('statContratados').textContent    = totalCont;
+    updateDevueltosCounter(totalDevueltos);
+
+    applyOfferFilters(resetPage);
+    if (prevOpenId) openAccordionWithFilter(prevOpenId, prevFilter);
+  } catch(e) {
+    document.getElementById('ofertasList').innerHTML =
+      `<div class="alert alert-error show">${e.message || 'No pudimos cargar tus ofertas.'}</div>`;
+    Swal.fire({
+      icon: 'error',
+      title: 'No pudimos cargar tus ofertas',
+      text: e.message || 'Intenta nuevamente en unos segundos.',
+      confirmButtonColor: '#ef4444'
+    });
+  }
+}
+
+function filterMisOfertas() {
+  applyOfferFilters(true);
+}
+
+function applyOfferFilters(resetPage = true) {
+  if (resetPage) offersPage = 1;
+  const q = (document.getElementById('searchOfertas').value || '').toLowerCase();
+  const est = document.getElementById('filtroEstadoOfertas').value;
+  let f = misOfertasData;
+  if (est) f = f.filter(o => o.estado === est);
+  if (q) f = f.filter(o => o.titulo.toLowerCase().includes(q) || (o.carrera_afin || '').toLowerCase().includes(q));
+  if (currentStatFilter) {
+    if (currentStatFilter === 'activa') f = f.filter(o => o.estado === 'activa');
+    if (currentStatFilter === 'postulantes') f = f.filter(o => (o.total_postulantes || 0) > 0);
+    if (currentStatFilter === 'preseleccion') f = f.filter(o => (o.total_preseleccionados || 0) > 0);
+    if (currentStatFilter === 'contratados') f = f.filter(o => (o.total_contratados || 0) > 0);
+    if (currentStatFilter === 'devueltos') f = f.filter(o => Number(o.total_devueltos || 0) > 0);
+  }
+  updateStatFilterUI();
+  currentOffersView = f;
+  renderOfertas(f);
+}
+
+function toggleStatFilter(filter) {
+  currentStatFilter = currentStatFilter === filter ? null : filter;
+  applyOfferFilters();
+}
+
+function updateStatFilterUI() {
+  document.querySelectorAll('#statsEmpresa .stat-filter').forEach(card => {
+    card.classList.toggle('filter-active', card.dataset.filter === currentStatFilter);
+  });
+}
+
+function renderOfertas(data) {
+  const el = document.getElementById('ofertasList');
+  currentOffersView = Array.isArray(data) ? data : [];
+  const pageData = paginateData(currentOffersView, offersPage, PAGE_SIZE);
+  offersPage = pageData.page;
+  if (!pageData.totalItems) {
+    el.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">📋</div>
+      <h3>${misOfertasData.length ? 'Sin resultados con esos filtros' : 'Aún no tienes ofertas publicadas'}</h3>
+      <p>Haz clic en "Nueva oferta" para comenzar a reclutar candidatos.</p>
+    </div>`;
+    renderOffersPager(0, 1, 1);
+    return;
+  }
+  el.innerHTML = pageData.items.map(o => buildOfferAccordion(o)).join('');
+  renderOffersPager(pageData.totalItems, pageData.page, pageData.totalPages);
+}
+
+function openAccordionWithFilter(ofertaId, filtro = 'todos') {
+  const hdr  = document.getElementById(`acc-hdr-${ofertaId}`);
+  const body = document.getElementById(`acc-body-${ofertaId}`);
+  const chev = document.getElementById(`acc-chev-${ofertaId}`);
+  if (!hdr || !body || !chev) return;
+  document.querySelectorAll('.offer-acc-header').forEach(h => h.classList.remove('open'));
+  document.querySelectorAll('.offer-acc-body').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.acc-chevron').forEach(c => c.classList.remove('open'));
+  hdr.classList.add('open');
+  body.classList.add('open');
+  chev.classList.add('open');
+  openAccordionId = ofertaId;
+  openAccordionFilter = filtro || 'todos';
+  APPL_PAGES[getApplicantPageKey(ofertaId, openAccordionFilter)] = 1;
+  loadAccordionBody(ofertaId, openAccordionFilter);
+}
+
+function buildOfferAccordion(o) {
+  const isCerrada = o.estado === 'cerrada';
+  const statusLabel = { activa: 'Activa', pausada: 'Pausada', cerrada: 'Cerrada' }[o.estado] || o.estado;
+  const devueltos = Number(o.total_devueltos || 0);
+  const hasDevueltos = devueltos > 0;
+
+  return `
+  <div class="offer-accordion${isCerrada ? ' is-cerrada' : ''}" id="acc-${o.id}">
+    <div class="offer-acc-header" onclick="toggleAccordion(${o.id})" id="acc-hdr-${o.id}">
+
+      <!-- Status indicator -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;">
+        <div class="status-dot ${o.estado}"></div>
+        <span style="font-size:.6rem;color:var(--text-muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase;">${statusLabel}</span>
+      </div>
+
+      <!-- Info -->
+      <div class="offer-acc-info">
+        <div class="offer-acc-title">${o.titulo}</div>
+        <div class="offer-acc-sub">
+          ${o.vacantes  ? `<span>👤 ${o.vacantes} vacante${o.vacantes>1?'s':''}</span>` : ''}
+          ${o.modalidad ? `<span>📍 ${capitalize(o.modalidad)}</span>` : ''}
+          ${o.salario_rango ? `<span>💰 ${o.salario_rango}</span>` : ''}
+          ${o.fecha_limite  ? `<span>📅 Hasta ${formatDate(o.fecha_limite)}</span>` : ''}
+          <span style="color:var(--text-muted);">Publicado ${formatDate(o.creado_en)}</span>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">
+          ${tipoBadge(o.tipo_oferta)} ${tipoBadge(o.dirigido_a)} ${tipoBadge(o.modalidad)}
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="offer-acc-stats">
+        <div class="acc-stat${hasDevueltos ? ' dev-alert' : ''}">
+          ${hasDevueltos ? `<div class="dev-alert-icon" title="Hay devoluciones pendientes">!</div>` : ''}
+          <div class="n">${o.total_postulantes||0}</div>
+          <div class="l">Postulantes</div>
+          ${hasDevueltos ? `<div class="dev-alert-hint">${devueltos} devuelto${devueltos>1?'s':''}</div>` : ''}
+        </div>
+        <div class="acc-stat">
+          <div class="n amber">${o.total_preseleccionados||0}</div>
+          <div class="l">Preselec.</div>
+        </div>
+        <div class="acc-stat">
+          <div class="n green">${o.total_contratados||0}</div>
+          <div class="l">Contratados</div>
+        </div>
+      </div>
+
+      <!-- SOLO mostrar toggle activa/pausada si NO está cerrada -->
+      ${!isCerrada ? `
+      <div style="display:flex;gap:6px;" onclick="event.stopPropagation()">
+        <button class="btn btn-outline btn-xs" title="Editar oferta" onclick="editarOferta(${o.id})">✏️ Editar</button>
+        <button class="btn btn-ghost btn-xs"
+          title="${o.estado === 'activa' ? 'Pausar oferta' : 'Activar oferta'}"
+          onclick="toggleOferta(${o.id},'${o.estado === 'activa' ? 'pausada' : 'activa'}')">
+          ${o.estado === 'activa' ? '⏸ Pausar' : '▶ Activar'}
+        </button>
+      </div>` : `
+      <div onclick="event.stopPropagation()">
+        <span class="badge badge-gray" style="font-size:.7rem;">🔒 Oferta cerrada</span>
+      </div>`}
+
+      <div class="acc-chevron" id="acc-chev-${o.id}">▾</div>
+    </div>
+
+    <div class="offer-acc-body" id="acc-body-${o.id}">
+      <div id="acc-detail-${o.id}"></div>
+    </div>
+  </div>`;
+}
+
+async function toggleAccordion(ofertaId) {
+  const hdr  = document.getElementById(`acc-hdr-${ofertaId}`);
+  const body = document.getElementById(`acc-body-${ofertaId}`);
+  const chev = document.getElementById(`acc-chev-${ofertaId}`);
+  const isOpen = body.classList.contains('open');
+
+  document.querySelectorAll('.offer-acc-header').forEach(h => h.classList.remove('open'));
+  document.querySelectorAll('.offer-acc-body').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.acc-chevron').forEach(c => c.classList.remove('open'));
+
+  if (!isOpen) {
+    openAccordionWithFilter(ofertaId, 'todos');
+    return;
+  }
+  openAccordionId = null;
+  openAccordionFilter = 'todos';
+}
+
+async function loadAccordionBody(ofertaId, filtro = 'todos') {
+  const container = document.getElementById(`acc-detail-${ofertaId}`);
+  container.innerHTML = `<div class="appl-empty"><span class="spinner dark"></span> Cargando candidatos...</div>`;
+  try {
+    const postulantes = await apiFetch(`/postulaciones/oferta/${ofertaId}`);
+    postulantesCache[ofertaId] = postulantes;
+    renderAccordionBody(ofertaId, postulantes, filtro);
+  } catch(e) {
+    container.innerHTML = `<div class="appl-empty" style="color:var(--red);">${e.message}</div>`;
+  }
+}
+
+function renderAccordionBody(ofertaId, postulantes, filtroActivo) {
+  const container = document.getElementById(`acc-detail-${ofertaId}`);
+  const oferta    = misOfertasData.find(o => o.id === ofertaId);
+  const isCerrada = oferta?.estado === 'cerrada';
+
+  // Count per status
+  const counts = {
+    todos: postulantes.length,
+    enviada:      postulantes.filter(p => p.estado === 'enviada').length,
+    en_revision:  postulantes.filter(p => p.estado === 'en_revision').length,
+    // Preseleccionado = empresa eligió, sin carta aún (cerrada=0)
+    preseleccionado: postulantes.filter(p => p.estado === 'seleccionado' && !p.cerrada).length,
+    // Contratado = proceso cerrado, carta emitida
+    contratado:   postulantes.filter(p => p.estado === 'seleccionado' && p.cerrada).length,
+    rechazado:    postulantes.filter(p => p.estado === 'rechazado').length
+  };
+
+  // Get list for current filter
+  const getList = (f) => {
+    if (f === 'todos') return postulantes;
+    if (f === 'preseleccionado') return postulantes.filter(p => p.estado === 'seleccionado' && !p.cerrada);
+    if (f === 'contratado')      return postulantes.filter(p => p.estado === 'seleccionado' && p.cerrada);
+    return postulantes.filter(p => p.estado === f);
+  };
+
+  const visibleList = getList(filtroActivo);
+  const pJson = JSON.stringify(postulantes).replace(/'/g, "\\'");
+  const pageData = paginateApplicants(visibleList, ofertaId, filtroActivo);
+
+  const detailMarkup = oferta ? `
+  <div class="offer-detail">
+    <div class="offer-detail-title">Detalle de la oferta</div>
+    <div class="offer-detail-grid">
+      ${oferta.carrera_afin ? `<span>📚 <strong>Carreras</strong> ${escapeHtml(oferta.carrera_afin)}</span>` : ''}
+      ${oferta.modalidad ? `<span>📍 <strong>Modalidad</strong> ${escapeHtml(capitalize(oferta.modalidad))}</span>` : ''}
+      ${oferta.horario ? `<span>⏰ <strong>Horario</strong> ${escapeHtml(oferta.horario)}</span>` : ''}
+      ${oferta.salario_rango ? `<span>💰 <strong>Rango</strong> ${escapeHtml(oferta.salario_rango)}</span>` : ''}
+      ${oferta.vacantes ? `<span>👤 <strong>Vacantes</strong> ${oferta.vacantes}</span>` : ''}
+      ${oferta.fecha_limite ? `<span>📅 <strong>Límite</strong> ${formatDate(oferta.fecha_limite)}</span>` : ''}
+    </div>
+    ${oferta.descripcion ? `<div class="offer-detail-block"><strong>Descripción:</strong> ${escapeHtml(oferta.descripcion)}</div>` : ''}
+    ${oferta.requisitos ? `<div class="offer-detail-block"><strong>Requisitos:</strong> ${escapeHtml(oferta.requisitos)}</div>` : ''}
+    ${oferta.beneficios ? `<div class="offer-detail-block"><strong>Beneficios:</strong> ${escapeHtml(oferta.beneficios)}</div>` : ''}
+    ${oferta.actividades ? `<div class="offer-detail-block"><strong>Actividades:</strong> ${escapeHtml(oferta.actividades)}</div>` : ''}
+  </div>` : '';
+
+  // Action bar
+  let actionBar;
+  if (isCerrada) {
+    actionBar = `
+    <div class="closed-banner">
+      <span class="badge badge-gray">🔒 Oferta cerrada</span>
+      <span>Esta vacante fue cubierta. El proceso de contratación fue completado por el administrador.</span>
+      <span style="margin-left:auto;font-size:.78rem;color:var(--text-muted);">${postulantes.length} candidato${postulantes.length!==1?'s':''} en total</span>
+    </div>`;
+  } else {
+    actionBar = `
+    <div class="offer-actions-bar">
+      ${counts.preseleccionado > 0 ? `
+      <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:6px 12px;font-size:.8rem;color:#92400e;display:flex;align-items:center;gap:6px;">
+        ⏳ <strong>${counts.preseleccionado}</strong> preseleccionado${counts.preseleccionado!==1?'s':''} esperando carta del administrador
+      </div>` : ''}
+      <div style="margin-left:auto;font-size:.8rem;color:var(--text-muted);">
+        <strong style="color:var(--text);">${postulantes.length}</strong> candidato${postulantes.length!==1?'s':''} en total
+      </div>
+    </div>`;
+  }
+
+  // Tabs — siempre mostrar, incluso en cerrada (para ver historial)
+  const tabs = `
+  <div class="appl-tabs" id="appl-tabs-${ofertaId}">
+    ${[
+      { k:'todos',          l:'Todos',           c:counts.todos },
+      { k:'enviada',        l:'Enviados',         c:counts.enviada },
+      { k:'en_revision',    l:'En revisión',      c:counts.en_revision },
+      { k:'preseleccionado',l:'⏳ Preseleccionados',c:counts.preseleccionado },
+      { k:'contratado',     l:'✅ Contratados',   c:counts.contratado },
+      { k:'rechazado',      l:'Rechazados',       c:counts.rechazado },
+    ].map(t => `
+      <button class="appl-tab ${filtroActivo===t.k?'active':''}"
+        onclick="setAccTab(${ofertaId},this,'${t.k}',${pJson})">
+        ${t.l}${t.c>0?`<span style="background:rgba(29,111,232,0.12);color:var(--accent);font-size:.65rem;padding:1px 5px;border-radius:99px;margin-left:3px;">${t.c}</span>`:''}
+      </button>`).join('')}
+  </div>`;
+
+  // List
+  const listMarkup = pageData.items.length === 0
+    ? `<div class="appl-empty">
+        ${postulantes.length === 0 ? '📭 Aún no hay postulantes para esta oferta.' : '✅ No hay candidatos con este estado.'}
+       </div>`
+    : pageData.items.map(p => buildApplicantRow(p, ofertaId, isCerrada)).join('');
+
+  const pagerMarkup = renderApplicantPager(ofertaId, filtroActivo, pageData.totalItems, pageData.page, pageData.totalPages);
+
+  container.innerHTML = `${actionBar}${detailMarkup}${tabs}<div id="appl-list-${ofertaId}">${listMarkup}</div>${pagerMarkup}`;
+}
+
+function setAccTab(ofertaId, btn, filtro, raw) {
+  btn.closest('.appl-tabs').querySelectorAll('.appl-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  openAccordionId = ofertaId;
+  openAccordionFilter = filtro;
+  const postulantes = typeof raw === 'string' ? JSON.parse(raw) : raw;
+  postulantesCache[ofertaId] = postulantes;
+  APPL_PAGES[getApplicantPageKey(ofertaId, filtro)] = 1;
+  renderAccordionBody(ofertaId, postulantes, filtro);
+}
+
+function buildApplicantRow(p, ofertaId, ofertaCerrada) {
+  // Determine row class and badge
+  let rowClass = '', statusBadge = '';
+
+  if (p.estado === 'seleccionado' && p.cerrada) {
+    rowClass = 'contratado';
+    statusBadge = `<span class="badge badge-green" style="font-size:.67rem;">✅ Contratado</span>`;
+  } else if (p.estado === 'seleccionado' && !p.cerrada) {
+    rowClass = 'preseleccionado';
+    statusBadge = `<span class="badge badge-yellow" style="font-size:.67rem;">⏳ Preseleccionado</span>`;
+  } else if (p.estado === 'rechazado') {
+    rowClass = 'rechazado';
+    statusBadge = `<span class="badge badge-red" style="font-size:.67rem;">✗ No seleccionado</span>`;
+  } else if (p.estado === 'en_revision') {
+    statusBadge = `<span class="badge badge-yellow" style="font-size:.67rem;">🔍 En revisión</span>`;
+  } else {
+    statusBadge = `<span class="badge badge-blue" style="font-size:.67rem;">📨 Enviado</span>`;
+  }
+
+  // Status message for preseleccionado/contratado
+  let statusMsg = '';
+  if (p.estado === 'seleccionado' && !p.cerrada) {
+    statusMsg = `
+    <div style="margin-top:7px;font-size:.78rem;padding:7px 10px;border-radius:7px;
+      background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);color:#92400e;">
+      ⏳ Preseleccionado — El administrador del Instituto generará la carta de aceptación.
+      ${p.carta_generada
+        ? `<strong style="color:#065f46;"> · 📜 Carta emitida el ${formatDate(p.carta_generada)}</strong>`
+        : ''}
+    </div>`;
+  } else if (p.estado === 'seleccionado' && p.cerrada) {
+    statusMsg = `
+    <div style="margin-top:7px;font-size:.78rem;padding:7px 10px;border-radius:7px;
+      background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.2);color:#065f46;">
+      ✅ <strong>Contratado</strong> — Proceso cerrado.
+      ${p.carta_generada ? ` Carta emitida el ${formatDate(p.carta_generada)}.` : ''}
+    </div>`;
+  }
+
+  if (p.nota_admin) {
+    statusMsg += `
+    <div style="margin-top:7px;font-size:.78rem;padding:7px 10px;border-radius:7px;
+      background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);color:#1d4ed8;">
+      📬 <strong>Nota del administrador:</strong> ${escapeHtml(p.nota_admin)}<br>
+      Selecciona otro postulante o actualiza los documentos para continuar.
+    </div>`;
+  }
+
+  // Actions — only show if not cerrado
+  let actions = '';
+  if (!p.cerrada && !ofertaCerrada) {
+    if (p.estado === 'enviada' || p.estado === 'en_revision') {
+      actions = `
+        <button class="btn btn-outline btn-xs" onclick="marcarRevision(${p.id},${ofertaId})" title="Marcar en revisión">🔍 Revisar</button>
+        <button class="btn btn-success btn-xs" onclick="seleccionarCandidato(${p.id},${ofertaId},'${(p.nombres+' '+p.apellidos).replace(/'/g,"\\'")}')">✓ Preseleccionar</button>
+        <button class="btn btn-danger btn-xs" onclick="rechazarCandidato(${p.id},${ofertaId})">✗</button>`;
+    }
+    // Nota: empresa NO puede cerrar el proceso. Eso solo lo hace el admin.
+    // Empresa solo puede preseleccionar/rechazar/revisar.
+  }
+
+  return `
+  <div class="appl-row ${rowClass}" id="appl-${p.id}">
+    <div class="avatar" style="width:36px;height:36px;font-size:.76rem;">${initials(p.nombres+' '+p.apellidos)}</div>
+    <div class="appl-body">
+      <div class="appl-name">${p.nombres} ${p.apellidos}</div>
+      <div class="appl-meta">
+        <span>🎓 ${p.carrera}</span>
+        ${tipoBadge(p.tipo)}
+        ${statusBadge}
+        <span>📅 ${timeAgo(p.fecha_postulacion)}</span>
+        ${p.dni ? `<span>🪪 ${p.dni}</span>` : ''}
+        ${p.telefono ? `<span>📱 ${p.telefono}</span>` : ''}
+      </div>
+      ${p.carta_presentacion ? `<div class="appl-carta-text">"${truncate(p.carta_presentacion, 180)}"</div>` : ''}
+      ${statusMsg}
+    </div>
+    <div class="appl-actions">
+      <button type="button" class="btn btn-ghost btn-xs" onclick="openCv(${p.id})">📄 CV</button>
+      ${actions}
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// CANDIDATE ACTIONS
+// ════════════════════════════════════════════════════════
+async function marcarRevision(id, ofertaId) {
+  try {
+    await apiFetch('/postulaciones/' + id + '/revision', { method: 'PATCH' });
+    toast('Candidato marcado como en revisión', 'info');
+    await loadAccordionBody(ofertaId);
+    await loadOfertas();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function seleccionarCandidato(id, ofertaId, nombre) {
+  const result = await Swal.fire({
+    title: '¿Preseleccionar candidato?',
+    html: `
+    <p style="font-size:.9rem;color:#4a6a8a;">
+      Vas a preseleccionar a <strong>${nombre}</strong> para el puesto.<br><br>
+      El administrador del Instituto recibirá la notificación y generará la <strong>Carta de Aceptación oficial</strong>.
+      Una vez emitida la carta, el proceso quedará cerrado y el candidato figurará como <strong>Contratado</strong>.
+    </p>`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: '✓ Sí, preseleccionar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#f59e0b',
+    cancelButtonColor: '#94a3b8'
+  });
+  if (!result.isConfirmed) return;
+  try {
+    await apiFetch('/postulaciones/' + id + '/seleccionar', { method: 'PATCH' });
+    toast('🎯 Candidato preseleccionado. El administrador emitirá la carta de aceptación.', 'success');
+    await loadAccordionBody(ofertaId);
+    await loadOfertas();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function rechazarCandidato(id, ofertaId) {
+  const result = await Swal.fire({
+    title: 'Rechazar candidato',
+    html: '<p style="font-size:.88rem;color:#4a6a8a;margin-bottom:8px;">Indica el motivo del rechazo (opcional):</p>',
+    input: 'textarea',
+    inputPlaceholder: 'Ej: El perfil no se ajusta al puesto requerido...',
+    inputAttributes: { style: 'font-size:.88rem;border-radius:8px;border:1.5px solid rgba(29,111,232,0.18);padding:10px;' },
+    showCancelButton: true,
+    confirmButtonText: '✗ Rechazar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#94a3b8'
+  });
+  if (!result.isConfirmed) return;
+  try {
+    await apiFetch('/postulaciones/' + id + '/rechazar', { method: 'PATCH', body: JSON.stringify({ nota: result.value || '' }) });
+    toast('Candidato rechazado', 'info');
+    await loadAccordionBody(ofertaId);
+    await loadOfertas();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function toggleOferta(id, estado) {
+  // Extra protection: never allow changing a closed offer
+  const oferta = misOfertasData.find(o => o.id === id);
+  if (oferta?.estado === 'cerrada') {
+    toast('Las ofertas cerradas no pueden modificarse.', 'info');
+    return;
+  }
+  try {
+    await apiFetch('/ofertas/' + id + '/estado', { method: 'PATCH', body: JSON.stringify({ estado }) });
+    toast(estado === 'activa' ? '✅ Oferta activada' : '⏸ Oferta pausada', 'info');
+    await loadOfertas();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ════════════════════════════════════════════════════════
+// NUEVA OFERTA / EDICIÓN
+// ════════════════════════════════════════════════════════
+if (offerForm) offerForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  const isEdit = !!editingOfferId;
+  const currentEditingId = editingOfferId;
+  const btn = document.getElementById('btnPublicar');
+  btn.innerHTML = `<span class="spinner"></span> ${isEdit ? 'Guardando...' : 'Publicando...'}`;
+  btn.disabled = true;
+
+  updateHorarioFields();
+
+  const body = Object.fromEntries(new FormData(offerForm).entries());
+  body.fecha_limite = (body.fecha_limite || '').trim();
+  body.fecha_inicio = (body.fecha_inicio || '').trim();
+  body.fecha_fin = (body.fecha_fin || '').trim();
+  body.horario = (body.horario || '').trim();
+  body.horario_dias = (body.horario_dias || '').trim();
+  body.area_practica = (body.area_practica || '').trim();
+  body.actividades = (body.actividades || '').trim();
+  const horasVal = body.horas_practicas ? Number(body.horas_practicas) : null;
+  body.horas_practicas = Number.isFinite(horasVal) ? horasVal : null;
+  const validationError = validateOfferPayload(body);
+  if (validationError) {
+    toast(validationError, 'warning');
+    btn.disabled = false;
+    setOfferFormMode(isEdit ? 'edit' : 'create');
+    return;
+  }
+
+  let stopLoading = () => {};
+  try {
+    stopLoading = processingAlert(isEdit ? 'Guardando cambios...' : 'Publicando la oferta...');
+    const endpoint = isEdit ? `/ofertas/${currentEditingId}` : '/ofertas';
+    const method = isEdit ? 'PUT' : 'POST';
+    await apiFetch(endpoint, { method, body: JSON.stringify(body) });
+    stopLoading();
+
+    if (isEdit) {
+      await Swal.fire({
+        icon: 'success',
+        title: 'Oferta actualizada',
+        text: 'Los cambios se guardaron correctamente.',
+        confirmButtonColor: '#1d6fe8'
+      });
+      cancelarEdicion();
+    } else {
+      await Swal.fire({
+        title: '¡Oferta publicada!',
+        text: 'Los candidatos ya pueden postular a tu oferta.',
+        icon: 'success', confirmButtonText: 'Ver mis ofertas',
+        confirmButtonColor: '#1d6fe8'
+      });
+      offerForm.reset();
+      setFechaLimiteMin();
+      showSection('ofertas');
+    }
+  } catch(err) {
+    stopLoading();
+    await Swal.fire({
+      icon: 'error',
+      title: isEdit ? 'No pudimos guardar los cambios' : 'No pudimos publicar la oferta',
+      text: err.message || 'Revisa los datos e inténtalo nuevamente.',
+      confirmButtonColor: '#ef4444'
+    });
+  } finally {
+    btn.disabled = false;
+    setOfferFormMode(editingOfferId ? 'edit' : 'create');
+  }
+});
+
+// ════════════════════════════════════════════════════════
+// PERFIL
+// ════════════════════════════════════════════════════════
+const EMPRESA_FIELD_LABELS = {
+  correo: 'Correo corporativo',
+  telefono: 'Teléfono de contacto',
+  direccion: 'Dirección',
+  sitio_web: 'Sitio web',
+  actividad_economica: 'Actividad económica',
+  descripcion: 'Descripción pública',
+  representante_nombre: 'Representante legal',
+  representante_cargo: 'Cargo del representante',
+  representante_dni: 'DNI del representante',
+  password: 'Nueva contraseña'
+};
+
+const EMPRESA_EDITABLE_KEYS = Object.keys(EMPRESA_FIELD_LABELS);
+
+const EMPRESA_INPUT_LAYOUT = [
+  { name: 'correo', label: EMPRESA_FIELD_LABELS.correo, type: 'email', placeholder: 'contacto@empresa.com', autocomplete: 'email' },
+  { name: 'telefono', label: EMPRESA_FIELD_LABELS.telefono, type: 'tel' },
+  { name: 'direccion', label: EMPRESA_FIELD_LABELS.direccion, type: 'text' },
+  { name: 'sitio_web', label: EMPRESA_FIELD_LABELS.sitio_web, type: 'url', placeholder: 'https://empresa.com' },
+  { name: 'actividad_economica', label: EMPRESA_FIELD_LABELS.actividad_economica, type: 'text' },
+  { name: 'representante_nombre', label: EMPRESA_FIELD_LABELS.representante_nombre, type: 'text' },
+  { name: 'representante_cargo', label: EMPRESA_FIELD_LABELS.representante_cargo, type: 'text' },
+  { name: 'representante_dni', label: EMPRESA_FIELD_LABELS.representante_dni, type: 'text', maxlength: 8 },
+  { name: 'password', label: EMPRESA_FIELD_LABELS.password, type: 'password', placeholder: 'Mínimo 8 caracteres', autocomplete: 'new-password', hint: 'Deja en blanco si no deseas modificarla.' }
+];
+
+function escapeAttr(value) {
+  return (value ?? '').toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function solicitudStatusBadge(estado) {
+  const map = {
+    pendiente: ['badge-yellow', 'Pendiente'],
+    aprobado: ['badge-green', 'Aprobado'],
+    rechazado: ['badge-red', 'Rechazado']
+  };
+  const data = map[estado] || ['badge-gray', estado || '—'];
+  return `<span class="badge ${data[0]}">${data[1]}</span>`;
+}
+
+function maskSolicitudValue(key, value) {
+  if (key === 'password' || key === 'password_hash') return '•••••••• (se actualizará al aprobar)';
+  return value || '—';
+}
+
+function formatSolicitudCampos(campos = {}, labels) {
+  const entries = Object.entries(campos);
+  if (!entries.length) return '<div style="font-size:.8rem;color:var(--text-muted);">Sin campos</div>';
+  return `<ul>
+    ${entries.map(([key, value]) => `<li><strong>${labels[key] || key}:</strong> ${maskSolicitudValue(key, value)}</li>`).join('')}
+  </ul>`;
+}
+
+function buildSolicitudHistory(list, labels) {
+  if (!list.length) {
+    return `<div class="empty-state" style="padding:18px;">
+      <div class="empty-state-icon">✏️</div>
+      <h3>Sin solicitudes</h3>
+      <p>Aún no has pedido cambios de perfil.</p>
+    </div>`;
+  }
+  return `<div class="request-history">
+    ${list.map(item => `
+      <div class="request-entry">
+        <header>
+          ${solicitudStatusBadge(item.estado)}
+          <span>Enviada: ${formatDate(item.creado_en)}</span>
+          ${item.resuelto_en ? `<span>Resuelto: ${formatDate(item.resuelto_en)}</span>` : ''}
+        </header>
+        ${formatSolicitudCampos(item.campos, labels)}
+        ${item.motivo ? `<div class="request-note">📌 Motivo: ${item.motivo}</div>` : ''}
+        ${item.respuesta_admin ? `<div class="request-response">📝 Respuesta admin: ${item.respuesta_admin}</div>` : ''}
+      </div>`).join('')}
+  </div>`;
+}
+
+function renderEmpresaPerfil(perfil, solicitudes) {
+  const container = document.getElementById('perfilData');
+  if (!container) return;
+  const pending = solicitudes.find(s => s.estado === 'pendiente');
+  container.innerHTML = `
+    <div class="profile-hero">
+      <div style="display:flex;gap:14px;align-items:flex-start;flex:1;min-width:260px;">
+        <div class="company-avatar" style="width:56px;height:56px;font-size:1.15rem;">${initials(perfil.razon_social||'Empresa')}</div>
+        <div>
+          <h3>${perfil.razon_social || '—'}</h3>
+          <div style="font-size:.85rem;color:var(--text-muted);">
+            ${perfil.sector || 'Sin sector'} · RUC ${perfil.ruc || '—'}
+          </div>
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+            ${tipoBadge(perfil.estado)}
+            ${perfil.actividad_economica ? `<span class="status-pill">${perfil.actividad_economica}</span>` : ''}
+          </div>
+        </div>
+      </div>
+      <div style="min-width:240px;font-size:.83rem;color:var(--text-soft);">
+        <div style="font-size:.72rem;text-transform:uppercase;color:var(--text-muted);letter-spacing:.08em;margin-bottom:6px;">Representante legal</div>
+        <div><strong>${perfil.representante_nombre || '—'}</strong></div>
+        <div>${perfil.representante_cargo || '—'}</div>
+        <div>DNI: ${perfil.representante_dni || '—'}</div>
+        ${perfil.nombre_contacto ? `<div style="margin-top:8px;">Contacto RRHH: ${perfil.nombre_contacto}</div>` : ''}
+      </div>
+    </div>
+    ${perfil.descripcion ? `<div class="profile-card" style="margin:16px 0;"><p style="margin:0;font-size:.88rem;color:var(--text-soft);">${perfil.descripcion}</p></div>` : ''}
+    <div class="profile-card" style="margin-bottom:16px;">
+      <div class="profile-meta-grid">
+        <div><span>Correo</span><strong>${perfil.correo}</strong></div>
+        <div><span>Teléfono</span><strong>${perfil.telefono || '—'}</strong></div>
+        <div><span>Dirección</span><strong>${perfil.direccion || '—'}</strong></div>
+        <div><span>Sitio web</span><strong>${perfil.sitio_web ? `<a href="${perfil.sitio_web}" target="_blank" style="color:var(--accent);">${perfil.sitio_web}</a>` : '—'}</strong></div>
+        <div><span>Estado de la cuenta</span><strong>${tipoBadge(perfil.estado)}</strong></div>
+        <div><span>Registro</span><strong>${formatDate(perfil.creado_en)}</strong></div>
+      </div>
+    </div>
+    ${pending ? `<div class="pending-banner">⏳ Tienes una solicitud pendiente de revisión por el administrador.</div>` : ''}
+    <div class="profile-edit-grid">
+      <div class="profile-card">
+        <h4>Solicitar actualización</h4>
+        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:12px;">Solo se enviarán los campos que modifiques. El administrador validará cada cambio antes de aplicarlo.</p>
+        <form id="empresaEditForm">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+            ${EMPRESA_INPUT_LAYOUT.map(field => {
+              const value = field.name === 'password' ? '' : escapeAttr(perfil[field.name] || '');
+              const maxlength = field.maxlength ? `maxlength="${field.maxlength}"` : '';
+              const placeholder = field.placeholder ? `placeholder="${field.placeholder}"` : '';
+              const autocomplete = field.autocomplete ? `autocomplete="${field.autocomplete}"` : '';
+              const hint = field.hint ? '<small style="display:block;margin-top:4px;font-size:.72rem;color:var(--text-muted);">' + field.hint + '</small>' : '';
+              return `
+              <div class="profile-field">
+                <label>${field.label}</label>
+                <input ${maxlength} type="${field.type || 'text'}" name="${field.name}" value="${value}" ${placeholder} ${autocomplete}>
+                ${hint}
+              </div>`;
+            }).join('')}
+          </div>
+          <div class="profile-field">
+            <label>${EMPRESA_FIELD_LABELS.descripcion}</label>
+            <textarea name="descripcion" placeholder="Describe brevemente a la empresa">${escapeAttr(perfil.descripcion || '')}</textarea>
+          </div>
+          <div class="profile-field">
+            <label>Mensaje para el administrador</label>
+            <textarea name="motivo" placeholder="Explica por qué necesitas estos cambios"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Enviar a validación</button>
+        </form>
+      </div>
+      <div class="profile-card request-card">
+        <h4>Historial de solicitudes</h4>
+        <div id="empresaRequests">${buildSolicitudHistory(solicitudes, EMPRESA_FIELD_LABELS)}</div>
+      </div>
+    </div>`;
+
+  const form = document.getElementById('empresaEditForm');
+  if (form) {
+    const draft = readDraft(EMP_PERFIL_DRAFT_KEY);
+    applyFormValues(form, draft);
+    bindDraftHandlers(form, EMP_PERFIL_DRAFT_KEY);
+    form.addEventListener('submit', handleEmpresaSolicitudSubmit);
+  }
+}
+
+async function handleEmpresaSolicitudSubmit(e) {
+  e.preventDefault();
+  if (!empresaPerfil) return;
+  const form = e.target;
+  const payload = {};
+  EMPRESA_EDITABLE_KEYS.forEach(key => {
+    const value = form.elements[key]?.value?.trim() || '';
+    const current = (empresaPerfil[key] || '').toString();
+    if (value && value !== current) payload[key] = value;
+  });
+  if (!Object.keys(payload).length) {
+    toast('Modifica al menos un campo antes de enviar.', 'info');
+    return;
+  }
+  const body = {
+    campos: payload,
+    motivo: form.elements.motivo?.value?.trim() || ''
+  };
+  const btn = form.querySelector('button[type="submit"]');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Enviando...'; }
+  try {
+    await apiFetch('/perfil/solicitudes', { method: 'POST', body: JSON.stringify(body) });
+    toast('Solicitud enviada para aprobación.', 'success');
+    clearDraft(EMP_PERFIL_DRAFT_KEY);
+    await loadPerfil();
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Enviar a validación'; }
+  }
+}
+
+async function loadPerfil() {
+  try {
+    const [perfil, solicitudes] = await Promise.all([
+      apiFetch('/empresas/perfil'),
+      apiFetch('/perfil/solicitudes')
+    ]);
+    empresaPerfil = perfil;
+    empresaSolicitudes = solicitudes;
+    renderEmpresaPerfil(perfil, solicitudes);
+  } catch(e) {
+    const container = document.getElementById('perfilData');
+    if (container) container.innerHTML = `<div class="card"><div class="alert alert-error show">${e.message || 'No pudimos cargar tu perfil.'}</div></div>`;
+  }
+}
+
+// Init
+loadOfertas();
+scheduleAutoRefresh();
+</script>
+</body>
+</html>

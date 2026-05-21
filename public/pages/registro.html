@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro — Bolsa de Trabajo LDV</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <style>
+        body.reg-page {
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 12% 18%, rgba(59,134,247,0.12), transparent 55%),
+                radial-gradient(circle at 78% 8%, rgba(34,211,238,0.12), transparent 50%),
+                var(--bg);
+            padding: 48px 24px 72px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            overflow-x: hidden;
+            overflow-y: visible;
+            position: relative;
+            color: var(--text);
+        }
+        body.reg-page::before,
+        body.reg-page::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 65% 20%, rgba(59,134,247,0.08), transparent 60%);
+            opacity: 0.35;
+            pointer-events: none;
+        }
+        body.reg-page::after {
+            opacity: 0.15;
+            background: radial-gradient(circle at 20% 80%, rgba(148,163,184,0.15), transparent 70%);
+        }
+
+        .reg-page__shape {
+            position: absolute;
+            width: 320px; height: 320px;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.35;
+            z-index: 0;
+        }
+        .reg-page__shape--one { top: -110px; right: -60px; background: rgba(148,163,184,0.35); }
+        .reg-page__shape--two { bottom: -140px; left: -80px; background: rgba(59,134,247,0.25); }
+
+        .reg-grid {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1280px;
+            display: grid;
+            grid-template-columns: minmax(280px, 360px) minmax(0, 820px);
+            gap: 34px;
+            align-items: flex-start;
+        }
+        @media(max-width: 1080px) {
+            .reg-grid { grid-template-columns: 1fr; }
+            .reg-aside { order: 2; }
+            .reg-main { order: 1; }
+        }
+
+        .reg-aside {
+            border-radius: var(--radius-xl);
+            padding: 42px 38px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.97), rgba(240,245,255,0.92));
+            border: 1px solid rgba(15,23,42,0.06);
+            box-shadow: var(--shadow-lg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            gap: 26px;
+        }
+        .reg-aside__eyebrow {
+            font-size: .75rem;
+            letter-spacing: .42em;
+            text-transform: uppercase;
+            color: rgba(74,106,138,0.7);
+            margin-bottom: 14px;
+        }
+        .reg-aside__logo {
+            width: 64px; height: 64px;
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-display);
+            font-size: 1.45rem; font-weight: 800;
+            letter-spacing: -0.04em;
+            background: var(--grad-primary);
+            box-shadow: var(--shadow-blue);
+            margin-bottom: 18px;
+            color: white;
+        }
+        .reg-aside h1 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+        .reg-aside__lead {
+            font-size: .95rem;
+            color: var(--text-soft);
+            line-height: 1.7;
+            margin-bottom: 18px;
+        }
+        .reg-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .reg-aside .feature-list li { color: var(--text-soft); }
+        .reg-aside .feature-list li span {
+            background: rgba(59,134,247,0.12);
+            color: var(--accent);
+            border: 1px solid rgba(59,134,247,0.25);
+        }
+        .reg-aside .chip-grid { gap: 10px; }
+        .reg-aside .chip-grid .chip {
+            background: rgba(15,23,42,0.04);
+            border: 1px solid rgba(15,23,42,0.08);
+            color: var(--text-soft);
+        }
+        .reg-aside .stat-pill {
+            background: rgba(59,134,247,0.08);
+            border: 1px solid rgba(59,134,247,0.2);
+            color: var(--accent);
+        }
+        .reg-aside .stat-pill span { color: var(--text-muted); }
+
+        .reg-main { position: relative; }
+        .reg-main .form-shell {
+            padding: 42px;
+            backdrop-filter: blur(14px);
+            background: rgba(255,255,255,0.94);
+        }
+        @media(max-width: 600px) {
+            body.reg-page { padding: 28px 14px 48px; }
+            .reg-main .form-shell { padding: 26px 20px; }
+        }
+
+        .reg-wrap {
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: .85rem; font-weight: 600;
+            color: var(--accent);
+            background: rgba(29,111,232,0.08);
+            border: 1.5px solid rgba(29,111,232,0.25);
+            border-radius: 999px;
+            padding: 8px 16px;
+            margin-bottom: 26px;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            align-self: flex-start;
+            z-index: 4;
+            transition: color .2s ease, transform .2s ease, background .2s ease, border-color .2s ease;
+        }
+        .back-link:hover {
+            color: white;
+            background: var(--grad-primary);
+            border-color: transparent;
+            transform: translateX(-3px);
+        }
+
+        .reg-header { text-align: center; margin-bottom: 30px; }
+        .reg-logo {
+            width: 64px; height: 64px;
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 18px;
+            background: rgba(29,111,232,0.08);
+            border: 1.5px solid rgba(29,111,232,0.25);
+            font-size: 2rem;
+        }
+        .reg-header h2 {
+            font-size: 2rem;
+            letter-spacing: -0.03em;
+            margin-bottom: 6px;
+        }
+        .reg-header p { color: var(--text-muted); font-size: .92rem; }
+        .login-inline {
+            margin-top: 18px;
+            margin-bottom: 24px;
+            font-size: .9rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .login-inline a {
+            color: var(--accent);
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+        }
+        .login-inline a:hover { border-bottom-color: currentColor; }
+        .login-inline--inside {
+            justify-content: flex-start;
+            margin-top: 6px;
+            margin-bottom: 0;
+            font-size: .88rem;
+        }
+        .login-inline--inside a { border-bottom-color: transparent; }
+
+        .form-progress { margin-bottom: 28px; }
+
+        .reg-progress-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .12em;
+            color: var(--text-muted);
+            margin-top: -18px;
+            margin-bottom: 26px;
+            gap: 8px;
+        }
+        .reg-progress-meta span {
+            color: rgba(74,106,138,0.7);
+            font-weight: 600;
+            transition: color .2s ease;
+        }
+        .reg-progress-meta span.current {
+            color: var(--text);
+        }
+        .reg-progress-meta span.complete {
+            color: var(--accent);
+        }
+
+        .type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 26px;
+        }
+        .type-card {
+            position: relative;
+            padding: 26px 24px;
+            border-radius: 20px;
+            border: 1.5px solid rgba(15,23,42,0.08);
+            background: linear-gradient(135deg, rgba(248,249,255,0.98), rgba(235,242,255,0.92));
+            box-shadow: 0 15px 35px rgba(15,23,42,0.08);
+            cursor: pointer;
+            transition: transform .25s ease, box-shadow .25s ease, border-color .2s ease, background .3s ease;
+            overflow: hidden;
+            isolation: isolate;
+        }
+        .type-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            border: 1.5px solid transparent;
+            background: linear-gradient(120deg, rgba(37,99,235,0.45), rgba(99,102,241,0.35)) border-box;
+            opacity: 0;
+            transition: opacity .25s ease, box-shadow .25s ease;
+            pointer-events: none;
+        }
+        .type-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+        .type-card.selected {
+            border-color: transparent;
+            background: linear-gradient(140deg, rgba(59,134,247,0.14), rgba(99,102,241,0.12), rgba(34,211,238,0.12));
+            box-shadow: 0 25px 55px rgba(29,111,232,0.25);
+            transform: translateY(-6px);
+        }
+        .type-card.selected::after { opacity: 1; box-shadow: 0 0 35px rgba(99,102,241,0.25); }
+        .type-card .tc-icon {
+            width: 56px; height: 56px;
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem;
+            background: rgba(29,111,232,0.12);
+            margin-bottom: 14px;
+            color: var(--accent);
+            transition: transform .25s ease, background .25s ease, box-shadow .25s ease, color .25s ease;
+            line-height: 1;
+        }
+        .type-card.selected .tc-icon {
+            background: var(--grad-primary);
+            color: white;
+            box-shadow: var(--shadow-blue);
+            transform: scale(1.05);
+        }
+        .type-card .tc-name { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+        .type-card .tc-desc { font-size: .82rem; color: var(--text-muted); line-height: 1.6; }
+        .tc-check {
+            position: absolute; top: 18px; right: 18px;
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: var(--grad-primary);
+            border: 1px solid transparent;
+            color: white; font-size: .85rem;
+            font-weight: 700;
+            text-transform: uppercase; letter-spacing: .12em;
+            box-shadow: var(--shadow-blue);
+            opacity: 0; transform: translateY(-6px);
+            transition: opacity .25s ease, transform .25s ease;
+        }
+        .tc-check::after {
+            content: 'Seleccionado';
+            font-size: .62rem;
+            letter-spacing: .18em;
+        }
+        .type-card.selected .tc-check { opacity: 1; transform: none; }
+
+        #alertReg { margin-bottom: 18px; }
+
+        .form-box {
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(15,23,42,0.08);
+            background: rgba(255,255,255,0.96);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            display: none;
+            animation: fadeInUp .3s ease;
+        }
+        .form-box.show { display: block; }
+
+        .form-box-header {
+            padding: 26px 34px 0;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+        .form-box-icon {
+            width: 48px; height: 48px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.35rem;
+        }
+        .icon-estudiante { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); }
+        .icon-empresa { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.25); }
+        .form-box-header h3 { font-size: 1.18rem; margin-bottom: 4px; }
+        .form-box-header p { font-size: .86rem; color: var(--text-muted); }
+
+        .approval-notice {
+            margin: 18px 34px 0;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            background: rgba(245,158,11,0.12);
+            border: 1px solid rgba(245,158,11,0.35);
+            color: #92400e;
+            display: flex; gap: 10px;
+            font-size: .82rem;
+        }
+        .approval-notice .n-icon { font-size: 1.1rem; }
+
+        .subtipo-section {
+            padding: 22px 34px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .subtipo-label { display: flex; align-items: center; gap: 10px; }
+        .subtipo-label::after {
+            content: '';
+            height: 1px;
+            flex: 1;
+            background: var(--border);
+        }
+        .subtipo-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            padding-bottom: 24px;
+        }
+        .subtipo-btn {
+            padding: 18px 18px 20px;
+            border-radius: var(--radius);
+            border: 1.5px solid rgba(15,23,42,0.08);
+            background: rgba(248,249,255,0.98);
+            color: var(--text);
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-start;
+            text-align: left;
+            min-height: 170px;
+            cursor: pointer;
+            outline: none;
+        }
+        .subtipo-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+        .subtipo-btn:focus-visible {
+            box-shadow: 0 0 0 3px rgba(29,111,232,0.2), 0 14px 30px rgba(29,111,232,0.15);
+        }
+        .subtipo-btn.selected {
+            border-color: transparent;
+            background: linear-gradient(135deg, rgba(37,99,235,0.12), rgba(99,102,241,0.1));
+            box-shadow: 0 18px 36px rgba(37,99,235,0.18);
+        }
+        .subtipo-btn .s-icon {
+            display: inline-flex;
+            width: 54px; height: 54px;
+            border-radius: 16px;
+            align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            background: rgba(29,111,232,0.1);
+            border: 1px solid rgba(29,111,232,0.2);
+            color: var(--accent);
+            margin-bottom: 4px;
+            line-height: 1;
+            box-shadow: 0 12px 26px rgba(29,111,232,0.12);
+        }
+        .subtipo-btn.selected .s-icon {
+            background: var(--grad-primary);
+            color: white;
+            border-color: transparent;
+            box-shadow: var(--shadow-blue);
+        }
+        .subtipo-btn .s-label {
+            display: block;
+            font-size: .95rem; font-weight: 700;
+        }
+        .subtipo-btn .s-desc {
+            display: block;
+            font-size: .78rem; color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .form-body { padding: 28px 34px 40px; }
+
+        .field-section {
+            margin: 26px 0 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+            padding: 4px 0;
+        }
+        .field-section::before {
+            content: '';
+            position: absolute;
+            inset: -6px 0 auto;
+            height: 58px;
+            background: linear-gradient(120deg, rgba(59,134,247,0.08), rgba(99,102,241,0.05));
+            border-radius: 18px;
+            z-index: 0;
+        }
+        .field-section-icon {
+            width: 46px; height: 46px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, rgba(59,134,247,0.25), rgba(99,102,241,0.25));
+            border: 1px solid rgba(59,134,247,0.35);
+            box-shadow: 0 12px 26px rgba(29,111,232,0.18);
+            color: white;
+            position: relative;
+            z-index: 1;
+            line-height: 1;
+        }
+        .field-section-icon::after {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: inherit;
+            background: radial-gradient(circle, rgba(255,255,255,0.35), transparent 60%);
+            opacity: .4;
+            z-index: -1;
+        }
+        .field-section-label {
+            font-size: .82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .14em;
+            color: var(--text-soft);
+            position: relative;
+            z-index: 1;
+        }
+        .field-section-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(148,163,184,0), rgba(59,134,247,0.4));
+            opacity: .6;
+            border-radius: 999px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-control { background: rgba(248,249,255,0.95); }
+        .form-control.error { border-color: var(--red); box-shadow: 0 8px 26px rgba(239,68,68,0.18); }
+
+        .ldv-code-field .form-control { font-family: 'Courier New', monospace; letter-spacing: .05em; }
+        .ldv-code-badge { background: rgba(37,99,235,0.1); border-color: rgba(37,99,235,0.25); }
+
+        .submit-zone { display: flex; flex-direction: column; gap: 14px; }
+        .submit-zone .btn-primary { font-size: 1rem; letter-spacing: .04em; box-shadow: var(--shadow-blue); }
+        .submit-zone .login-link {
+            font-size: .86rem;
+            color: var(--text-muted);
+        }
+        .submit-zone .login-link a {
+            color: var(--blue-400);
+            font-weight: 600;
+            transition: color .2s ease;
+        }
+        .submit-zone .login-link a:hover { color: var(--blue-300); }
+
+        .pw-wrap { position: relative; }
+        .pw-toggle {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            border: none; background: none;
+            color: var(--text-muted);
+        }
+        .pw-toggle:hover { color: var(--text); }
+
+        @media(max-width: 480px) {
+            .type-selector { grid-template-columns: 1fr; }
+            .subtipo-selector { grid-template-columns: 1fr; }
+            .reg-progress-meta { flex-direction: column; gap: 6px; align-items: flex-start; }
+        }
+    </style>
+    </head>
+    <body class="reg-page">
+    <div class="reg-page__shape reg-page__shape--one" aria-hidden="true"></div>
+    <div class="reg-page__shape reg-page__shape--two" aria-hidden="true"></div>
+
+    <div class="reg-grid">
+        <aside class="reg-aside">
+            <div>
+                <div class="reg-aside__eyebrow">Bolsa de Trabajo · 2026</div>
+                <div class="reg-aside__logo">LDV</div>
+                <h1>Impulsa tu próxima práctica</h1>
+                <p class="reg-aside__lead">Gestiona convenios EFSRT, recibe alertas de nuevas vacantes y haz match con empresas aliadas del Instituto Leonardo Da Vinci.</p>
+            </div>
+            <ul class="feature-list">
+                <li><span>1</span>Seguimiento en tiempo real de postulaciones y estados.</li>
+                <li><span>2</span>Convenios y anexos generados automáticamente.</li>
+                <li><span>3</span>Dashboard unificado para estudiantes y empresas.</li>
+            </ul>
+            <div class="chip-grid">
+                <span class="chip">EFSRT</span>
+                <span class="chip">Convenios Digitales</span>
+                <span class="chip">Prácticas 2026</span>
+            </div>
+            <div class="reg-stats">
+                <div class="stat-pill"><strong>1.3K+</strong><span>talentos activos</span></div>
+                <div class="stat-pill"><strong>320</strong><span>empresas aliadas</span></div>
+            </div>
+        </aside>
+
+        <div class="reg-main">
+            <div class="form-shell">
+                <div class="reg-wrap">
+
+    <a href="/" class="back-link">← Volver al inicio</a>
+
+    <div class="reg-header">
+        <div class="reg-logo">🧑‍💼</div>
+        <h2>Crear cuenta</h2>
+        <p>Únete a la Bolsa de Trabajo del Instituto Leonardo Da Vinci</p>
+    </div>
+
+    <div class="form-progress" id="progressSteps">
+        <span class="form-progress-step" data-step="1"></span>
+        <span class="form-progress-step" data-step="2"></span>
+        <span class="form-progress-step" data-step="3"></span>
+    </div>
+    <div class="reg-progress-meta" id="progressLabels">
+        <span class="current" data-step="1">Elegir perfil</span>
+        <span data-step="2">Completar formulario</span>
+        <span data-step="3">Confirmación</span>
+    </div>
+
+    <!-- Selector de tipo de cuenta -->
+    <div class="type-selector">
+        <div class="type-card" id="typeEstudiante" onclick="selectType('estudiante')">
+            <span class="tc-check">✓</span>
+            <span class="tc-icon">🎓</span>
+            <div class="tc-name">Talento LDV</div>
+            <div class="tc-desc">Soy practicante, egresado o titulado del instituto y busco oportunidades laborales</div>
+        </div>
+        <div class="type-card" id="typeEmpresa" onclick="selectType('empresa')">
+            <span class="tc-check">✓</span>
+            <span class="tc-icon">🏢</span>
+            <div class="tc-name">Empresa</div>
+            <div class="tc-desc">Quiero publicar ofertas de trabajo y encontrar talento formado en LDV</div>
+        </div>
+    </div>
+
+    <div id="loginInlineHome">
+        <div class="login-inline login-link" id="loginInline">
+            ¿Ya tienes cuenta?
+            <a href="/login">Inicia sesión aquí</a>
+        </div>
+    </div>
+
+    <div id="alertReg" class="alert"></div>
+
+    <!-- ══════════════════════════════════════════
+         FORMULARIO ESTUDIANTE
+    ══════════════════════════════════════════ -->
+    <div class="form-box" id="formEstudiante">
+
+        <div class="form-box-header">
+            <div class="form-box-icon icon-estudiante">🧑‍🎓</div>
+            <div>
+                <h3>Registro de Talento LDV</h3>
+                <p>Completa tus datos académicos y personales</p>
+            </div>
+        </div>
+
+        <!-- Aviso de aprobación -->
+        <div class="approval-notice">
+            <span class="n-icon">⏳</span>
+            <div>
+                <strong>Tu cuenta será verificada antes de activarse.</strong>
+                La secretaría de la Bolsa de Trabajo validará tu código de estudiante en el sistema institucional. Podrás ingresar una vez aprobada.
+            </div>
+        </div>
+
+        <!-- Subtipo -->
+        <div class="subtipo-section">
+            <div class="subtipo-label">¿Cuál es tu condición actual?</div>
+            <div class="subtipo-selector">
+                <button type="button" class="subtipo-btn" onclick="selectSubtipo('practicante', this)">
+                    <span class="s-icon">🔧</span>
+                    <span class="s-label">Practicante</span>
+                    <span class="s-desc">En prácticas o próximo a iniciarlas</span>
+                </button>
+                <button type="button" class="subtipo-btn" onclick="selectSubtipo('egresado', this)">
+                    <span class="s-icon">🎓</span>
+                    <span class="s-label">Egresado</span>
+                    <span class="s-desc">Culminaste la carrera, sin título aún</span>
+                </button>
+                <button type="button" class="subtipo-btn" onclick="selectSubtipo('titulado', this)">
+                    <span class="s-icon">🏆</span>
+                    <span class="s-label">Titulado</span>
+                    <span class="s-desc">Cuentas con título profesional</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="form-body">
+            <form id="formEstudianteData" autocomplete="on">
+
+                <!-- Identificación LDV -->
+                <div class="field-section">
+                    <div class="field-section-icon">🪪</div>
+                    <span class="field-section-label">Identificación en el Instituto</span>
+                    <div class="field-section-line"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Código de Estudiante LDV *
+                            <span style="font-size:.7rem;background:rgba(29,111,232,0.08);color:var(--accent);padding:1px 6px;border-radius:4px;margin-left:4px;font-weight:600;">requerido</span>
+                        </label>
+                        <div class="ldv-code-field">
+                            <input type="text" class="form-control" name="codigo_estudiante"
+                                id="est_codigo" required inputmode="text"
+                                   placeholder="Ej: 2024-CI-001"
+                                autocomplete="off"
+                                pattern="[A-Z0-9-]{6,20}"
+                                title="Utiliza letras mayúsculas, números y guiones"
+                                   oninput="this.value=this.value.toUpperCase()">
+                            <span class="ldv-code-badge">LDV</span>
+                        </div>
+                        <div class="form-hint">Exactamente como aparece en tu carné o sistema institucional</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">DNI *</label>
+                        <input type="text" class="form-control" name="dni"
+                               required placeholder="12345678"
+                               maxlength="8" pattern="[0-9]{8}"
+                               inputmode="numeric"
+                               oninput="this.value=this.value.replace(/\D/g,'').slice(0,8)">
+                    </div>
+                </div>
+
+                <!-- Datos personales -->
+                <div class="field-section">
+                    <div class="field-section-icon">👤</div>
+                    <span class="field-section-label">Datos Personales</span>
+                    <div class="field-section-line"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nombres *</label>
+                           <input type="text" class="form-control" name="nombres" required placeholder="José Carlos"
+                               pattern="[A-Za-zÁÉÍÓÚÑáéíóúñ\s]{2,60}" title="Solo letras y espacios"
+                               oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ\s]/g,'')">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Apellidos *</label>
+                           <input type="text" class="form-control" name="apellidos" required placeholder="García López"
+                               pattern="[A-Za-zÁÉÍÓÚÑáéíóúñ\s]{2,80}" title="Solo letras y espacios"
+                               oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ\s]/g,'')">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Teléfono / Celular</label>
+                        <input type="tel" class="form-control" name="telefono" placeholder="987654321"
+                               inputmode="tel" pattern="[0-9]{6,15}" maxlength="15"
+                               oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,15)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha de nacimiento</label>
+                        <input type="date" class="form-control" name="fecha_nacimiento"
+                               min="1960-01-01" max="2008-12-31">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Dirección domiciliaria *</label>
+                    <input type="text" class="form-control" name="direccion" required minlength="6"
+                           placeholder="Av. España 123, Urb. Primavera, Trujillo">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nacionalidad *</label>
+                        <select class="form-control" name="nacionalidad" required>
+                            <option value="PERUANA" selected>Peruana</option>
+                            <option value="VENEZOLANA">Venezolana</option>
+                            <option value="COLOMBIANA">Colombiana</option>
+                            <option value="BOLIVIANA">Boliviana</option>
+                            <option value="ECUATORIANA">Ecuatoriana</option>
+                            <option value="CHILENA">Chilena</option>
+                            <option value="ARGENTINA">Argentina</option>
+                            <option value="BRASILEÑA">Brasileña</option>
+                            <option value="PARAGUAYA">Paraguaya</option>
+                            <option value="URUGUAYA">Uruguaya</option>
+                            <option value="MEXICANA">Mexicana</option>
+                            <option value="ESPAÑOLA">Española</option>
+                            <option value="ITALIANA">Italiana</option>
+                            <option value="ALEMANA">Alemana</option>
+                            <option value="ESTADOUNIDENSE">Estadounidense</option>
+                            <option value="CANADIENSE">Canadiense</option>
+                            <option value="CHINA">China</option>
+                            <option value="JAPONESA">Japonesa</option>
+                            <option value="COREANA">Coreana</option>
+                            <option value="OTRA">Otra</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Sexo *</label>
+                        <select class="form-control" name="sexo" required>
+                            <option value="">— Seleccionar —</option>
+                            <option value="masculino">Masculino</option>
+                            <option value="femenino">Femenino</option>
+                            <option value="otro">Otro / Prefiero no decir</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Estado civil *</label>
+                        <select class="form-control" name="estado_civil" required>
+                            <option value="">— Seleccionar —</option>
+                            <option value="soltero">Soltero(a)</option>
+                            <option value="casado">Casado(a)</option>
+                            <option value="conviviente">Conviviente</option>
+                            <option value="divorciado">Divorciado(a)</option>
+                            <option value="viudo">Viudo(a)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Datos académicos -->
+                <div class="field-section">
+                    <div class="field-section-icon">🎓</div>
+                    <span class="field-section-label">Datos Académicos</span>
+                    <div class="field-section-line"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Carrera profesional *</label>
+                    <select class="form-control" name="carrera" required>
+                        <option value="">— Selecciona tu carrera —</option>
+                        <option value="Administración de Empresas">💼 Administración de Empresas</option>
+                        <option value="Contabilidad">📊 Contabilidad</option>
+                        <option value="Computación e Informática">💻 Computación e Informática</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" id="cicloGroup">
+                        <label class="form-label">Ciclo actual *</label>
+                        <select class="form-control" name="ciclo">
+                            <option value="">— Seleccionar —</option>
+                            <option value="I">I Ciclo</option>
+                            <option value="II">II Ciclo</option>
+                            <option value="III">III Ciclo</option>
+                            <option value="IV">IV Ciclo</option>
+                            <option value="V">V Ciclo</option>
+                            <option value="VI">VI Ciclo</option>
+                        </select>
+                        <div class="form-hint">Solo para practicantes activos</div>
+                    </div>
+                    <div class="form-group" id="anioEgresoField" style="display:none;">
+                        <label class="form-label">Año de egreso *</label>
+                        <input type="number" class="form-control" name="anio_egreso" min="1990" max="2100" placeholder="2024"
+                               inputmode="numeric" pattern="[0-9]{4}" maxlength="4">
+                        <div class="form-hint">Año en que culminaste todos los ciclos</div>
+                    </div>
+                    <div class="form-group" id="anioTitField" style="display:none;">
+                        <label class="form-label">Año de titulación *</label>
+                        <input type="number" class="form-control" name="anio_titulacion" min="1990" max="2100" placeholder="2025"
+                               inputmode="numeric" pattern="[0-9]{4}" maxlength="4">
+                        <div class="form-hint">Solo si ya cuentas con título profesional</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Habilidades / Herramientas</label>
+                    <input type="text" class="form-control" name="habilidades"
+                           placeholder="Ej: AutoCAD, Excel, Python, Atención al cliente..." maxlength="160">
+                    <div class="form-hint">Separadas por comas. Las empresas las verán al revisar tu perfil.</div>
+                </div>
+
+                <!-- Acceso -->
+                <div class="field-section">
+                    <div class="field-section-icon">🔐</div>
+                    <span class="field-section-label">Datos de Acceso</span>
+                    <div class="field-section-line"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Correo electrónico *</label>
+                    <input type="email" class="form-control" name="correo" required placeholder="correo@ejemplo.com" autocomplete="email">
+                    <div class="form-hint">Será tu usuario para ingresar al sistema</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Contraseña *</label>
+                        <div class="pw-wrap">
+                            <input type="password" class="form-control" name="password"
+                                   required placeholder="Mínimo 6 caracteres" minlength="6"
+                                   id="est_pass" style="padding-right:42px;">
+                            <button type="button" class="pw-toggle" onclick="togglePw('est_pass','est_pw_toggle')" id="est_pw_toggle">👁</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirmar contraseña *</label>
+                        <div class="pw-wrap">
+                            <input type="password" class="form-control" name="password2"
+                                   required placeholder="Repite la contraseña" minlength="6"
+                                   id="est_pass2" style="padding-right:42px;">
+                            <button type="button" class="pw-toggle" onclick="togglePw('est_pass2','est_pw_toggle2')" id="est_pw_toggle2">👁</button>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" name="tipo" id="tipoEstudianteHidden" value="">
+
+                <div class="submit-zone" id="submitZoneEstudiante">
+                    <button type="submit" class="btn btn-primary btn-lg" id="btnRegEst">
+                        Enviar solicitud de registro →
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         FORMULARIO EMPRESA
+    ══════════════════════════════════════════ -->
+    <div class="form-box" id="formEmpresa">
+
+        <div class="form-box-header">
+            <div class="form-box-icon icon-empresa">🏢</div>
+            <div>
+                <h3>Registro de Empresa</h3>
+                <p>Completa los datos de tu organización</p>
+            </div>
+        </div>
+
+        <!-- Aviso de aprobación -->
+        <div class="approval-notice">
+            <span class="n-icon">⏳</span>
+            <div>
+                <strong>Tu cuenta será revisada antes de activarse.</strong>
+                El administrador de la Bolsa de Trabajo aprobará el acceso de tu empresa. Recibirás acceso una vez confirmada.
+            </div>
+        </div>
+
+        <div class="form-body">
+            <form id="formEmpresaData" autocomplete="on">
+
+                <!-- Datos de la empresa -->
+                <div class="field-section" style="margin-top:0;">
+                    <div class="field-section-icon">🏢</div>
+                    <span class="field-section-label">Datos de la Empresa</span>
+                    <div class="field-section-line"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Razón social *</label>
+                        <input type="text" class="form-control" name="razon_social" required placeholder="Empresa S.A.C.">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">RUC *</label>
+                        <input type="text" class="form-control" name="ruc" required
+                               placeholder="20123456789" maxlength="11" pattern="[0-9]{11}"
+                               oninput="this.value=this.value.replace(/\D/g,'').slice(0,11)">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Sector / Rubro *</label>
+                        <select class="form-control" name="sector" required>
+                            <option value="">— Seleccionar sector —</option>
+                            <option>Tecnología</option>
+                            <option>Manufactura</option>
+                            <option>Construcción</option>
+                            <option>Salud</option>
+                            <option>Educación</option>
+                            <option>Finanzas / Banca</option>
+                            <option>Comercio</option>
+                            <option>Gastronomía / Hotelería</option>
+                            <option>Logística / Transporte</option>
+                            <option>Minería</option>
+                            <option>Servicios</option>
+                            <option>Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Teléfono de contacto</label>
+                        <input type="tel" class="form-control" name="telefono" placeholder="044123456"
+                               inputmode="tel" pattern="[0-9]{6,15}" maxlength="15"
+                               oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,15)">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Dirección</label>
+                    <input type="text" class="form-control" name="direccion"
+                           placeholder="Av. Principal 123, Trujillo, La Libertad">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción de la empresa</label>
+                    <textarea class="form-control" name="descripcion" rows="3"
+                              placeholder="Describe brevemente las actividades principales de tu empresa..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Actividad económica principal *</label>
+                    <input type="text" class="form-control" name="actividad_economica" required
+                           placeholder="Ej: Servicios educativos, comercialización de software..." style="text-transform:uppercase;"
+                           oninput="this.value=this.value.toUpperCase()">
+                    <div class="form-hint">Se mostrará en el Convenio EFSRT</div>
+                </div>
+
+                <!-- Representante legal — necesario para los documentos PDF -->
+                <div class="field-section">
+                    <div class="field-section-icon">👔</div>
+                    <span class="field-section-label">Representante Legal</span>
+                    <div class="field-section-line"></div>
+                </div>
+
+                <div style="background:var(--accent-dim2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:16px;font-size:.8rem;color:var(--text-soft);display:flex;gap:8px;align-items:flex-start;">
+                    <span style="flex-shrink:0;">📄</span>
+                    <span>Estos datos aparecerán en los documentos oficiales de EFSRT (Cartas de Aceptación, Constancias, Certificados) que el instituto emite.</span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nombre del representante legal *</label>
+                        <input type="text" class="form-control" name="representante_nombre" required
+                               placeholder="Ej: PÉREZ SILVA JUAN CARLOS"
+                               style="text-transform:uppercase;"
+                               oninput="this.value=this.value.toUpperCase()">
+                        <div class="form-hint">En mayúsculas: APELLIDOS NOMBRES</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cargo del representante *</label>
+                        <input type="text" class="form-control" name="representante_cargo"
+                               placeholder="Gerente General" value="Gerente General" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Documento de identidad del representante *</label>
+                        <input type="text" class="form-control" name="representante_dni" required maxlength="12"
+                               placeholder="DNI 87654321" pattern="[0-9A-Za-z]{8,12}">
+                        <div class="form-hint">DNI o carné de extranjería</div>
+                    </div>
+                </div>
+
+                <!-- Contacto y acceso -->
+                <div class="field-section">
+                    <div class="field-section-icon">📬</div>
+                    <span class="field-section-label">Contacto y Acceso</span>
+                    <div class="field-section-line"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nombre del contacto / RRHH *</label>
+                        <input type="text" class="form-control" name="nombre_contacto" required
+                               placeholder="Nombre del responsable de selección">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Sitio web</label>
+                        <input type="url" class="form-control" name="sitio_web"
+                               placeholder="https://empresa.com">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Correo corporativo *</label>
+                    <input type="email" class="form-control" name="correo" required
+                           placeholder="empresa@correo.com" autocomplete="email">
+                    <div class="form-hint">Será el usuario para iniciar sesión en la plataforma</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Contraseña *</label>
+                        <div class="pw-wrap">
+                            <input type="password" class="form-control" name="password"
+                                   required placeholder="Mínimo 6 caracteres" minlength="6"
+                                   id="emp_pass" style="padding-right:42px;">
+                            <button type="button" class="pw-toggle" onclick="togglePw('emp_pass','emp_pw_toggle')" id="emp_pw_toggle">👁</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirmar contraseña *</label>
+                        <div class="pw-wrap">
+                            <input type="password" class="form-control" name="password2"
+                                   required placeholder="Repite la contraseña" minlength="6"
+                                   id="emp_pass2" style="padding-right:42px;">
+                            <button type="button" class="pw-toggle" onclick="togglePw('emp_pass2','emp_pw_toggle2')" id="emp_pw_toggle2">👁</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="submit-zone" id="submitZoneEmpresa">
+                    <button type="submit" class="btn btn-primary btn-lg" id="btnRegEmp">
+                        Registrar empresa →
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</div><!-- /.reg-wrap -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/global.js"></script>
+<script>
+let currentType    = '';
+let currentSubtipo = '';
+
+const loginInline     = document.getElementById('loginInline');
+const loginInlineHome = document.getElementById('loginInlineHome');
+const submitZoneEst   = document.getElementById('submitZoneEstudiante');
+const submitZoneEmp   = document.getElementById('submitZoneEmpresa');
+
+const progressSteps  = Array.from(document.querySelectorAll('.form-progress-step'));
+const progressLabels = Array.from(document.querySelectorAll('.reg-progress-meta span'));
+
+function updateProgress(step) {
+    const normalized = Math.min(Math.max(step, 1), progressSteps.length);
+    progressSteps.forEach((el, idx) => {
+        const isComplete = idx < normalized - 1;
+        const isCurrent  = idx === normalized - 1;
+        el.classList.toggle('active', isComplete);
+        el.classList.toggle('current', isCurrent);
+    });
+    progressLabels.forEach((label, idx) => {
+        const isComplete = idx < normalized - 1;
+        const isCurrent  = idx === normalized - 1;
+        label.classList.toggle('complete', isComplete);
+        label.classList.toggle('current', isCurrent);
+    });
+}
+
+updateProgress(1);
+
+// ── Auto-select desde parámetros URL ──────────────────────────
+const params   = new URLSearchParams(window.location.search);
+const tipoParam = params.get('tipo');
+const subParam  = params.get('sub');
+if (tipoParam === 'empresa') {
+    selectType('empresa');
+} else if (tipoParam === 'estudiante') {
+    selectType('estudiante');
+    if (subParam) {
+        const btn = document.querySelector(`.subtipo-btn[onclick*="'${subParam}'"]`);
+        if (btn) selectSubtipo(subParam, btn);
+    }
+}
+
+// ── Tipo de cuenta ────────────────────────────────────────────
+function selectType(tipo) {
+    currentType = tipo;
+    document.getElementById('typeEstudiante').classList.toggle('selected', tipo === 'estudiante');
+    document.getElementById('typeEmpresa').classList.toggle('selected', tipo === 'empresa');
+    document.getElementById('formEstudiante').classList.toggle('show', tipo === 'estudiante');
+    document.getElementById('formEmpresa').classList.toggle('show', tipo === 'empresa');
+    document.getElementById('alertReg').className = 'alert';
+    updateProgress(tipo ? 2 : 1);
+
+    if (loginInline) {
+        const targetZone = tipo === 'empresa' ? submitZoneEmp : submitZoneEst;
+        if (tipo && targetZone) {
+            targetZone.appendChild(loginInline);
+            loginInline.classList.add('login-inline--inside');
+        } else if (loginInlineHome) {
+            loginInlineHome.appendChild(loginInline);
+            loginInline.classList.remove('login-inline--inside');
+        }
+    }
+
+    // Scroll suave al formulario
+    setTimeout(() => {
+        const el = document.getElementById(tipo === 'empresa' ? 'formEmpresa' : 'formEstudiante');
+        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+}
+
+// ── Subtipo de estudiante ─────────────────────────────────────
+function selectSubtipo(tipo, btn) {
+    currentSubtipo = tipo;
+    document.querySelectorAll('.subtipo-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('tipoEstudianteHidden').value = tipo;
+    document.getElementById('alertReg').className = 'alert';
+    setTimeout(() => {
+        const el = document.getElementById('formEstudiante');
+        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+    const cicloGroup = document.getElementById('cicloGroup');
+    const cicloSelect = cicloGroup?.querySelector('select');
+    const anioEgresoField = document.getElementById('anioEgresoField');
+    const anioEgresoInput = document.querySelector('[name="anio_egreso"]');
+    const anioTitField = document.getElementById('anioTitField');
+    const anioTitInput = document.querySelector('[name="anio_titulacion"]');
+
+    const toggleField = (wrapper, input, show, required) => {
+        if (!wrapper || !input) return;
+        wrapper.style.display = show ? 'block' : 'none';
+        input.required = !!required;
+        if (!show) input.value = '';
+    };
+
+    const isPracticante = tipo === 'practicante';
+    if (cicloGroup && cicloSelect) {
+        cicloGroup.style.display = isPracticante ? 'block' : 'none';
+        cicloSelect.required = isPracticante;
+        if (!isPracticante) cicloSelect.value = '';
+    }
+
+    toggleField(anioEgresoField, anioEgresoInput, !isPracticante, !isPracticante);
+    toggleField(anioTitField, anioTitInput, tipo === 'titulado', tipo === 'titulado');
+}
+
+// ── Toggle de contraseña ──────────────────────────────────────
+function togglePw(inputId, btnId) {
+    const inp = document.getElementById(inputId);
+    const btn = document.getElementById(btnId);
+    if (!inp) return;
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    if (btn) btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+// ── Submit Estudiante ─────────────────────────────────────────
+document.getElementById('formEstudianteData').addEventListener('submit', async e => {
+    e.preventDefault();
+
+    if (!currentSubtipo) {
+        await Swal.fire({
+            icon: 'warning',
+            title: 'Selecciona tu condición',
+            text: 'Indica si eres practicante, egresado o titulado para continuar.',
+            confirmButtonColor: '#f59e0b'
+        });
+        return;
+    }
+
+    // Validar contraseñas
+    const pass  = e.target.querySelector('[name="password"]').value;
+    const pass2 = e.target.querySelector('[name="password2"]').value;
+    if (pass !== pass2) {
+        await Swal.fire({ icon: 'error', title: 'Contraseñas distintas', text: 'Las contraseñas ingresadas no coinciden.', confirmButtonColor: '#ef4444' });
+        return;
+    }
+
+    const btn = document.getElementById('btnRegEst');
+    btn.innerHTML = '<span class="spinner"></span> Enviando solicitud...';
+    btn.disabled = true;
+    const stopLoading = processingAlert('Registrando tu perfil...');
+
+    const formData = new FormData(e.target);
+    const body = Object.fromEntries(formData.entries());
+    delete body.password2; // No enviar confirmación
+
+    try {
+        const res = await apiFetch('/auth/registro-estudiante', { method: 'POST', body: JSON.stringify(body) });
+        stopLoading();
+        updateProgress(3);
+        await Swal.fire({
+            icon: 'success',
+            title: '¡Solicitud enviada!',
+            html: `<p style="color:#4a6a8a;">Tu cuenta está <strong>pendiente de verificación</strong>.<br>
+                   La secretaría validará tu código <strong style="font-family:monospace;">${body.codigo_estudiante}</strong>
+                   y activará tu acceso en breve.</p>`,
+            confirmButtonText: 'Ir al login',
+            confirmButtonColor: '#1d6fe8'
+        });
+        window.location.href = '/login';
+    } catch (err) {
+        stopLoading();
+        await Swal.fire({
+            icon: 'error',
+            title: 'No pudimos registrarte',
+            text: err.message || 'Revisa los datos ingresados e inténtalo nuevamente.',
+            confirmButtonColor: '#ef4444'
+        });
+        btn.innerHTML = 'Enviar solicitud de registro →';
+        btn.disabled = false;
+    }
+});
+
+// ── Submit Empresa ────────────────────────────────────────────
+document.getElementById('formEmpresaData').addEventListener('submit', async e => {
+    e.preventDefault();
+
+    // Validar contraseñas
+    const pass  = e.target.querySelector('[name="password"]').value;
+    const pass2 = e.target.querySelector('[name="password2"]').value;
+    if (pass !== pass2) {
+        await Swal.fire({ icon: 'error', title: 'Contraseñas distintas', text: 'Las contraseñas ingresadas no coinciden.', confirmButtonColor: '#ef4444' });
+        return;
+    }
+
+    const btn = document.getElementById('btnRegEmp');
+    btn.innerHTML = '<span class="spinner"></span> Registrando empresa...';
+    btn.disabled = true;
+    const stopLoading = processingAlert('Enviando solicitud de empresa...');
+
+    const formData = new FormData(e.target);
+    const body = Object.fromEntries(formData.entries());
+    delete body.password2;
+
+    try {
+        await apiFetch('/auth/registro-empresa', { method: 'POST', body: JSON.stringify(body) });
+        stopLoading();
+        updateProgress(3);
+        await Swal.fire({
+            icon: 'success',
+            title: '¡Registro recibido!',
+            html: `<p style="color:#4a6a8a;">La empresa <strong>${body.razon_social}</strong> fue registrada correctamente.<br>
+                   El administrador revisará tu solicitud y activará el acceso en breve.</p>`,
+            confirmButtonText: 'Ir al login',
+            confirmButtonColor: '#1d6fe8'
+        });
+        window.location.href = '/login';
+    } catch (err) {
+        stopLoading();
+        await Swal.fire({
+            icon: 'error',
+            title: 'No pudimos registrar la empresa',
+            text: err.message || 'Vuelve a intentarlo en unos segundos.',
+            confirmButtonColor: '#ef4444'
+        });
+        btn.innerHTML = 'Registrar empresa →';
+        btn.disabled = false;
+    }
+});
+</script>
+</body>
+</html>

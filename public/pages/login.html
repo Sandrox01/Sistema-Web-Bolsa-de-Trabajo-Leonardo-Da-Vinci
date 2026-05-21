@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión — Bolsa de Trabajo LDV</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <style>
+        body.auth-page {
+            min-height: 100vh;
+            padding: 28px 18px 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(circle at 18% 12%, rgba(59,134,247,0.12), transparent 55%),
+                radial-gradient(circle at 80% 0%, rgba(34,211,238,0.12), transparent 60%),
+                var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            overflow-y: auto;
+            position: relative;
+        }
+        body.auth-page::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 60% 80%, rgba(148,163,184,0.18), transparent 65%);
+            opacity: .3;
+            pointer-events: none;
+        }
+        .auth-grid {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1040px;
+            display: grid;
+            grid-template-columns: minmax(280px, 360px) minmax(0, 520px);
+            gap: 26px;
+            align-items: center;
+        }
+        @media(max-width: 960px) {
+            .auth-grid {
+                grid-template-columns: 1fr;
+                max-width: 620px;
+            }
+        }
+
+        .auth-hero {
+            border-radius: var(--radius-xl);
+            padding: 34px 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.97), rgba(240,245,255,0.9));
+            border: 1px solid rgba(15,23,42,0.06);
+            box-shadow: var(--shadow-lg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .auth-hero__badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: .75rem; letter-spacing: .12em;
+            text-transform: uppercase;
+            background: rgba(29,111,232,0.08);
+            border: 1px solid rgba(29,111,232,0.25);
+            color: var(--accent);
+        }
+        .auth-hero h1 {
+            font-family: var(--font-display);
+            font-size: 2.3rem;
+            letter-spacing: -0.03em;
+        }
+        .auth-hero p { color: var(--text-soft); line-height: 1.7; }
+        .auth-hero .chip-grid { margin-top: auto; }
+        .auth-hero .feature-list li { color: var(--text-soft); }
+        .auth-hero .feature-list li span {
+            background: rgba(59,134,247,0.12);
+            color: var(--accent);
+            border: 1px solid rgba(59,134,247,0.25);
+        }
+        .auth-hero .chip {
+            color: var(--text-soft);
+            border: 1px solid rgba(15,23,42,0.08);
+            background: rgba(15,23,42,0.02);
+        }
+        .auth-hero .stat-pill {
+            background: rgba(59,134,247,0.08);
+            border: 1px solid rgba(59,134,247,0.18);
+            color: var(--accent);
+        }
+        .auth-hero .stat-pill span { color: var(--text-muted); }
+
+        .login-wrap {
+            border-radius: var(--radius-xl);
+            background: rgba(255,255,255,0.96);
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: var(--shadow-lg);
+            padding: 34px;
+        }
+        @media(max-width: 520px) { .login-wrap { padding: 24px; } }
+
+        .login-header { text-align: center; margin-bottom: 32px; }
+        .login-logo {
+            width: 64px; height: 64px; border-radius: 18px;
+            background: rgba(37,99,235,0.12);
+            border: 1px solid rgba(37,99,235,0.25);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 18px;
+        }
+        .login-logo .login-icon { font-size: 1.8rem; }
+        .login-title { font-size: 2rem; margin-bottom: 6px; }
+        .login-sub { color: var(--text-muted); }
+
+        .login-box {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(15,23,42,0.06);
+            padding: 34px;
+            box-shadow: var(--shadow-sm);
+        }
+        .login-footer { text-align: center; margin-top: 22px; font-size: .88rem; color: var(--text-muted); }
+        .login-footer a { color: var(--accent); font-weight: 600; }
+        .login-footer a:hover { text-decoration: underline; }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: .85rem; font-weight: 600;
+            color: var(--accent);
+            background: rgba(29,111,232,0.08);
+            border: 1.5px solid rgba(29,111,232,0.25);
+            border-radius: 999px;
+            padding: 8px 16px;
+            margin-bottom: 26px;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            z-index: 3;
+            transition: color .2s ease, transform .2s ease, background .2s ease, border-color .2s ease;
+        }
+        .back-link:hover {
+            color: white;
+            background: var(--grad-primary);
+            border-color: transparent;
+            transform: translateX(-3px);
+        }
+
+        .pw-wrap { position: relative; }
+        .pw-toggle {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: var(--text-muted); font-size: .9rem;
+        }
+        .pw-toggle:hover { color: var(--text); }
+
+        .admin-hint {
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.35);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            font-size: .82rem;
+            color: #92400e;
+            margin-bottom: 18px;
+            display: none; align-items: center; gap: 8px;
+        }
+        .admin-hint.show { display: flex; }
+    </style>
+    </head>
+    <body class="auth-page">
+    <div class="auth-grid">
+        <section class="auth-hero">
+            <span class="auth-hero__badge">Acceso seguro</span>
+            <h1>Conecta con tu panel LDV</h1>
+            <p>Gestiona postulaciones, publica ofertas y genera convenios EFSRT desde un solo lugar.</p>
+            <ul class="feature-list">
+                <li><span>✓</span>Alertas inmediatas de nuevas vacantes y postulaciones.</li>
+                <li><span>✓</span>Firma digital de anexos y seguimiento documentario.</li>
+                <li><span>✓</span>Dashboard responsivo para empresas, talentos y admins.</li>
+            </ul>
+            <div class="chip-grid">
+                <span class="chip">Talentos</span>
+                <span class="chip">Empresas</span>
+                <span class="chip">Administración</span>
+            </div>
+            <div class="stat-pill" style="max-width:220px; margin-top:16px;">
+                <strong>24/7</strong>
+                <span>plataforma disponible</span>
+            </div>
+        </section>
+
+        <div class="login-wrap">
+            <a href="/" class="back-link">← Volver al inicio</a>
+
+            <div class="login-header">
+                <div class="login-logo"><span class="login-icon" role="img" aria-label="Acceso">🔐</span></div>
+                <h1 class="login-title">Bienvenido de vuelta</h1>
+                <p class="login-sub">Accede a la Bolsa de Trabajo del Instituto LDV</p>
+            </div>
+
+            <div class="login-box">
+                <div class="admin-hint" id="adminHint">💡 Acceso administrativo: usa el correo y contraseña del administrador del sistema.</div>
+                <div id="alertLogin" class="alert"></div>
+
+                <form id="loginForm" autocomplete="on">
+                    <div class="form-group">
+                        <label class="form-label">Correo electrónico</label>
+                        <input type="email" class="form-control" id="correo" autocomplete="email" placeholder="tu@correo.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contraseña</label>
+                        <div class="pw-wrap">
+                            <input type="password" class="form-control" id="password" autocomplete="current-password" placeholder="••••••••" required style="padding-right:42px;">
+                            <button type="button" class="pw-toggle" onclick="togglePw()" id="pwToggle">👁</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" style="width:100%;margin-top:8px;" id="btnLogin">
+                        Iniciar sesión
+                    </button>
+                </form>
+            </div>
+
+            <div class="login-footer">
+                ¿No tienes cuenta? <a href="/registro">Regístrate aquí</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/global.js"></script>
+<script>
+    // Redirect if already logged in
+    if (Auth.isLoggedIn()) {
+        const u = Auth.getUser();
+        if (u) {
+            const map = { empresa: '/dashboard-empresa', estudiante: '/dashboard-estudiante', admin: '/dashboard-admin' };
+            window.location.href = map[u.tipo] || '/';
+        }
+    }
+
+    function togglePw() {
+        const inp = document.getElementById('password');
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+        document.getElementById('pwToggle').textContent = inp.type === 'password' ? '👁' : '🙈';
+    }
+
+    document.getElementById('correo').addEventListener('input', e => {
+        document.getElementById('adminHint').classList.toggle('show', e.target.value.includes('admin'));
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const btn = document.getElementById('btnLogin');
+        btn.innerHTML = '<span class="spinner"></span> Ingresando...';
+        btn.disabled = true;
+        const stopLoading = processingAlert('Validando credenciales...');
+        try {
+            const data = await apiFetch('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    correo: document.getElementById('correo').value,
+                    password: document.getElementById('password').value
+                })
+            });
+            stopLoading();
+            Auth.setSession(data);
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Bienvenido!',
+                text: 'Tu acceso fue validado correctamente.',
+                confirmButtonColor: '#1d6fe8',
+                confirmButtonText: 'Ir a mi panel'
+            });
+            window.location.href = data.redirect;
+        } catch (err) {
+            stopLoading();
+            await Swal.fire({
+                icon: 'error',
+                title: 'No pudimos iniciar sesión',
+                text: err.message || 'Revisa tus credenciales e inténtalo nuevamente.',
+                confirmButtonColor: '#ef4444'
+            });
+            btn.innerHTML = 'Iniciar sesión';
+            btn.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>
